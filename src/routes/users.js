@@ -9,6 +9,8 @@ router.post('/auth', (req, res) => {
     return res.sendStatus(401);
   }
 
+  // For now we only accept basic authentication and only for the
+  // admin user.
   const pass = req.headers.authorization.substr('Basic '.length);
 
   if (btoa('admin:' + process.env.ADMIN_PASS) !== pass) {
@@ -20,7 +22,7 @@ router.post('/auth', (req, res) => {
     scope: 'admin'
   }, process.env.JWT_SECRET);
 
-  res.status(200).json({ token });
+  res.status(201).json({ token });
 });
 
 export default router;

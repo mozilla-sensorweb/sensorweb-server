@@ -1,11 +1,22 @@
-import express from 'express';
-import path from 'path';
-import owasp from 'owasp-password-strength-test';
+import bodyParser       from 'body-parser';
+import cors             from 'cors';
+import express          from 'express';
+import expressValidator from 'express-validator';
+import owasp            from 'owasp-password-strength-test';
+import path             from 'path';
 
-import users from './routes/users';
+import clients          from './routes/clients';
+import users            from './routes/users';
 
 let app = express();
 
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(expressValidator());
+app.use(bodyParser.json());
+
+app.use(cors());
+
+app.use('/api/clients', clients);
 app.use('/api/users', users);
 
 if (!process.env.ADMIN_PASS) {
