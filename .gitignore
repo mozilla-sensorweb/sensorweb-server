@@ -9,3 +9,8 @@ node_modules
 
 # Vi
 *.swp
+
+# Config files
+config/dev.json
+config/stage.json
+config/prod.json
