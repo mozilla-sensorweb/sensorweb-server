@@ -3,6 +3,7 @@ import supertest  from 'supertest';
 
 import app        from '../src/server';
 import clients    from '../src/models/clients';
+import config     from '../src/config';
 import {
   BAD_REQUEST,
   errnos,
@@ -12,11 +13,12 @@ import {
   FORBIDDEN
 } from '../src/errors';
 
+const endpointPrefix = '/api/v' + config.get('version');
 const server = supertest.agent(app);
 
-describe('POST /api/clients', () => {
+describe('POST ' + endpointPrefix + '/clients', () => {
   it('should response 400 BadRequest if name param is missing', done => {
-    server.post('/api/clients')
+    server.post(endpointPrefix + '/clients')
           .expect('Content-type', /json/)
           .expect(400)
           .end((err, res) => {
@@ -29,7 +31,7 @@ describe('POST /api/clients', () => {
   });
 
   it('should response 400 BadRequest if name param is empty', done => {
-    server.post('/api/clients')
+    server.post(endpointPrefix + '/clients')
           .send({ name: '' })
           .expect('Content-type', /json/)
           .expect(400)
@@ -44,7 +46,7 @@ describe('POST /api/clients', () => {
 
   it('should response 201 Created if request is valid', done => {
     const name = 'clientName';
-    server.post('/api/clients')
+    server.post(endpointPrefix + '/clients')
           .send({ name: 'clientName' })
           .expect('Content-type', /json/)
           .expect(201)
@@ -60,7 +62,7 @@ describe('POST /api/clients', () => {
   it('should response 403 Forbidden if API client is already registered',
      done => {
     const name = 'clientName';
-    server.post('/api/clients')
+    server.post(endpointPrefix + '/clients')
           .send({ name: 'clientName' })
           .expect('Content-type', /json/)
           .expect(403)
@@ -74,10 +76,10 @@ describe('POST /api/clients', () => {
   });
 });
 
-describe('GET /api/clients', () => {
+describe('GET ' + endpointPrefix + '/clients', () => {
   it('should response 200 OK with an array containing the registered client',
      done => {
-    server.get('/api/clients')
+    server.get(endpointPrefix + '/clients')
           .expect('Content-type', /json/)
           .expect(200)
           .end((err, res) => {
@@ -95,7 +97,7 @@ describe('GET /api/clients', () => {
   it('should response 200 OK with an empty array',
      done => {
     clients.clear().then(() => {
-      server.get('/api/clients')
+      server.get(endpointPrefix + '/clients')
             .expect('Content-type', /json/)
             .expect(200)
             .end((err, res) => {
@@ -107,11 +109,11 @@ describe('GET /api/clients', () => {
   });
 });
 
-describe('DELETE /api/clients/:key', () => {
+describe('DELETE ' + endpointPrefix + 'clients/:key', () => {
   it('should response 204 NoResponse if request is to remove existing client',
      done => {
     clients.create('test').then(client => {
-      server.delete('/api/clients/' + client.key)
+      server.delete(endpointPrefix + '/clients/' + client.key)
             .expect('Content-type', /json/)
             .expect(204)
             .end((err, res) => {
@@ -123,7 +125,7 @@ describe('DELETE /api/clients/:key', () => {
 
   it('should response 204 NoResponse if request is to remove non existing client',
      done => {
-    server.delete('/api/clients/whatever')
+    server.delete(endpointPrefix + '/clients/whatever')
           .expect('Content-type', /json/)
           .expect(204)
           .end((err, res) => {

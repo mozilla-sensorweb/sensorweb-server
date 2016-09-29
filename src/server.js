@@ -5,6 +5,8 @@ import expressValidator from 'express-validator';
 import owasp            from 'owasp-password-strength-test';
 import path             from 'path';
 
+import config           from './config';
+
 import clients          from './routes/clients';
 import users            from './routes/users';
 
@@ -16,8 +18,10 @@ app.use(bodyParser.json());
 
 app.use(cors());
 
-app.use('/api/clients', clients);
-app.use('/api/users', users);
+const endpointPrefix = '/api/v' + config.get('version');
+
+app.use(endpointPrefix + '/clients', clients);
+app.use(endpointPrefix + '/users', users);
 
 if (!process.env.ADMIN_PASS) {
   throw('You need to provide an admin pass setting the ADMIN_PASS env var.');
