@@ -34,3 +34,5 @@ if (!process.env.JWT_SECRET) {
 }
 
 app.listen(8080, () => console.log('Running on localhost:8080'));
+
+exports = module.exports = app;

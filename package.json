@@ -4,16 +4,20 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon --watch src --exec babel-node -- src/index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "NODE_END=development nodemon --watch src --exec babel-node -- src/server.js",
+    "test": "NODE_ENV=test ADMIN_PASS=TestPassword.1 JWT_SECRET=secret nodemon -x ./node_modules/.bin/mocha --compilers js:babel-register test/*js"
   },
   "keywords": [],
   "author": "",
-  "license": "MPL 2.0",
+  "license": "MPL-2.0",
   "devDependencies": {
     "babel-cli": "^6.14.0",
     "babel-preset-es2015": "^6.14.0",
-    "nodemon": "^1.10.2"
+    "babel-register": "^6.16.3",
+    "mocha": "^3.1.0",
+    "nodemon": "^1.10.2",
+    "should": "^11.1.0",
+    "supertest": "^2.0.0"
   },
   "dependencies": {
     "body-parser": "^1.15.2",

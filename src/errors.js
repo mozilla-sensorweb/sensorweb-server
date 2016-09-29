@@ -4,6 +4,7 @@ const errnos = {
   ERRNO_FORBIDDEN               : 403,
   ERRNO_INTERNAL_ERROR          : 500
 };
+exports.errnos = errnos;
 
 // Error messages.
 const errors = {
@@ -11,11 +12,13 @@ const errors = {
   FORBIDDEN       : 'Forbidden',
   INTERNAL_ERROR  : 'Internal Server Error'
 };
+exports.errors = errors;
 
 // Model errors.
 const modelErrors = {
   RECORD_ALREADY_EXISTS: 'RecordAlreadyExists'
 };
+exports.modelErrors = modelErrors;
 
 exports.ApiError = (res, code, errno, error, message) => {
   if (!res) {

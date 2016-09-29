@@ -10,7 +10,7 @@ exports.create = name => {
     if (memStore[name]) {
       return reject(new Error(RECORD_ALREADY_EXISTS));
     }
-    const key = randomBytes(16).toString('hex');
+    const key = randomBytes(8).toString('hex');
     const secret = randomBytes(64).toString('hex');
     memStore[name] = {
       name,
@@ -43,5 +43,13 @@ exports.remove = key => {
   if (memStore[key]) {
     delete memStore[key];
   }
+  return Promise.resolve();
+}
+
+exports.clear = () => {
+  if (process.env.NODE_ENV !== 'test') {
+    return Promise.resolve();
+  }
+  memStore = {};
   return Promise.resolve();
 }
