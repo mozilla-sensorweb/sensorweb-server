@@ -10,6 +10,16 @@
 import express from 'express';
 
 import clients from '../models/clients';
+import {
+  ApiError,
+  BAD_REQUEST,
+  FORBIDDEN,
+  ERRNO_FORBIDDEN,
+  ERRNO_INTERNAL_ERROR,
+  ERRNO_INVALID_API_CLIENT_NAME,
+  INTERNAL_ERROR,
+  RECORD_ALREADY_EXISTS
+} from '../errors';
 
 let router = express.Router();
 
@@ -17,19 +27,22 @@ let router = express.Router();
 router.post('/', (req, res) => {
   // Required params: name
   // XXX We will probably require redirect url for signin/signup flow.
-  req.checkBody('name', 'missing required parameter').notEmpty();
+  req.checkBody('name', 'missing or invalid required "name" parameter')
+     .notEmpty();
 
   const errors = req.validationErrors();
   if (errors) {
-    // XXX proper error format.
-    return res.status(400).send('Errors: ' + JSON.stringify(errors));
+    return ApiError(res, 400, ERRNO_INVALID_API_CLIENT_NAME, BAD_REQUEST,
+                    JSON.stringify(errors));
   }
 
   clients.create(req.body.name).then(client => {
     res.status(201).send(client);
   }).catch(error => {
-    // XXX proper error format.
-    res.status(500).send(error);
+    if (error.message && error.message === RECORD_ALREADY_EXISTS) {
+      return ApiError(res, 403, ERRNO_FORBIDDEN, FORBIDDEN);
+    }
+    ApiError(res, 500, ERRNO_INTERNAL_ERROR, INTERNAL_ERROR);
   });
 });
 
@@ -38,24 +51,21 @@ router.get('/', (req, res) => {
   clients.getAll().then(clients => {
     res.status(200).send(clients);
   }).catch(error => {
-    // XXX proper error format.
-    res.status(500).send(error);
+    ApiError(res, 500, ERRNO_INTERNAL_ERROR, INTERNAL_ERROR);
   })
 });
 
 // Remove a registered API client.
 router.delete('/:key', (req, res) => {
-  // Required params: name
-  // XXX We will probably require redirect url for signin/signup flow.
-  req.checkParams('key', 'missing required parameter').notEmpty();
-
-  const errors = req.validationErrors();
-  if (errors) {
-    // XXX proper error format.
-    return res.status(400).send('Errors: ' + JSON.stringify(errors));
+  const key = req.params.key;
+  if (!key) {
+    return res.status(204).send();
   }
-
-  res.status(204).send();
+  clients.remove(key).then(() => {
+    res.status(204).send();
+  }).catch(() => {
+    res.status(204).send();
+  });
 });
 
 export default router;

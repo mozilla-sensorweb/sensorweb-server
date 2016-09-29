@@ -1,13 +1,14 @@
 import { randomBytes } from 'crypto';
 
+import { RECORD_ALREADY_EXISTS } from '../errors';
+
 // XXX temporary store clients in memory.
 let memStore = {};
 
 exports.create = name => {
   return new Promise((resolve, reject) => {
     if (memStore[name]) {
-      // XXX error code.
-      return reject(new Error());
+      return reject(new Error(RECORD_ALREADY_EXISTS));
     }
     const key = randomBytes(16).toString('hex');
     const secret = randomBytes(64).toString('hex');
@@ -30,11 +31,6 @@ exports.getAll = () => {
 
 exports.get = (key, includeSecret = false) => {
   return new Promise((resolve, reject) => {
-    if (!memStore[key]) {
-      // XXX error code.
-      return reject(new Error());
-    }
-
     if (includeSecret) {
       return resolve(memStore[key]);
     }

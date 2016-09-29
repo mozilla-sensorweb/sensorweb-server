@@ -44,6 +44,27 @@ All successful requests will produce a response with HTTP status code of "20X" a
 
 Failures due to invalid behavior from the client will produce a response with HTTP status code in the "4XX" range and content-type of "application/json".  Failures due to an unexpected situation on the server side will produce a response with HTTP status code in the "5XX" range and content-type of "application/json".
 
+To simplify error handling for the client, the type of error is indicated both by a particular HTTP status code, and by an application-specific error code in the JSON response body.  For example:
+
+```js
+{
+  "code": 400, // matches the HTTP status code
+  "errno": 777, // stable application-level error number
+  "error": "Bad Request", // string description of the error type
+  "message": "the value of salt is not allowed to be undefined"
+}
+```
+
+Responses for particular types of error may include additional parameters.
+
+The currently-defined error responses are:
+
+* status code 400, errno 400: Bad request.
+* status code 400, errno 100: Invalid client API name. Missing or malformed client API name.
+* status code 401, errno 401: Unauthorized. If credentials are not valid.
+* status code 403, errno 403: Forbidden. The server understood the request, but is refusing to fulfill it. Authorization will not help and the request SHOULD NOT be repeated.
+* status code 500, errno 500: Internal server error.
+
 # API Endpoints
 
 * Login
@@ -87,6 +108,9 @@ Date →Fri, 23 Sep 2016 16:22:39 GMT
 ## POST /clients
 Creates a new API client.
 ### Request
+___Parameters___
+* name - API client name.
+
 ```ssh
 POST /api/clients HTTP/1.1
 Content-Type: application/json
@@ -98,6 +122,8 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImFkbWluIiwic
 ```
 
 ### Response
+Successful requests will produce a "201 Created" response with a body containing the name and the generated API key and secret.
+
 Access-Control-Allow-Origin →*
 Connection →keep-alive
 Content-Length →198
@@ -121,6 +147,8 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImFkbWluIiwic
 ```
 
 ### Response
+Successful requests will produce a 200 response with an array containing the list of registered API clients.
+
 ```ssh
 Access-Control-Allow-Origin →*
 Connection →keep-alive
@@ -145,3 +173,4 @@ Cache-Control: no-cache
 ```
 
 ### Response
+Successful requests will produce a "204 No Content" response.
