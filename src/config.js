@@ -1,8 +1,32 @@
 import convict from 'convict';
 import fs      from 'fs';
+import owasp   from 'owasp-password-strength-test';
 import path    from 'path';
 
+const defaultValue = 'default';
+
 const conf = convict({
+  adminPass: {
+    doc: 'The password for the admin user. Follow OWASP guidelines for passwords',
+    format: value => {
+      const adminPass = owasp.test(value);
+      if (!adminPass.strong) {
+        adminPass.errors.forEach(error => console.error(error));
+        throw new Error('Admin pass is default or not strong enough.');
+      }
+    },
+    default: 'invalid'
+  },
+  adminSessionSecret: {
+    doc: 'Secret to sign admin session tokens',
+    format: value => {
+      // convict does not allow config entries without defaults.
+      if (value === defaultValue) {
+        throw new Error('Do not use default secrets');
+      }
+    },
+    default: defaultValue
+  },
   env: {
     doc: 'The application environment.',
     format: ['dev', 'test', 'stage', 'prod'],

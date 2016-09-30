@@ -1,5 +1,6 @@
 import { randomBytes } from 'crypto';
 
+import config                    from '../config';
 import { RECORD_ALREADY_EXISTS } from '../errors';
 
 // XXX temporary store clients in memory.
@@ -47,7 +48,8 @@ exports.remove = key => {
 }
 
 exports.clear = () => {
-  if (process.env.NODE_ENV !== 'test') {
+  console.log('Clear', config.get('env'));
+  if (config.get('env') !== 'test') {
     return Promise.resolve();
   }
   memStore = {};

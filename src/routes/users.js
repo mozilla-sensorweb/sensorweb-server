@@ -1,6 +1,8 @@
-import btoa from 'btoa';
-import express from 'express';
-import jwt from 'jsonwebtoken';
+import btoa     from 'btoa';
+import express  from 'express';
+import jwt      from 'jsonwebtoken';
+
+import config   from '../config';
 
 let router = express.Router();
 
@@ -13,14 +15,14 @@ router.post('/auth', (req, res) => {
   // admin user.
   const pass = req.headers.authorization.substr('Basic '.length);
 
-  if (btoa('admin:' + process.env.ADMIN_PASS) !== pass) {
+  if (btoa('admin:' + config.get('adminPass')) !== pass) {
     return res.sendStatus(401);
   }
 
   const token = jwt.sign({
     id: 'admin',
     scope: 'admin'
-  }, process.env.JWT_SECRET);
+  }, config.get('adminSessionSecret'));
 
   res.status(201).json({ token });
 });
