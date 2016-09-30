@@ -2,6 +2,7 @@ import bodyParser       from 'body-parser';
 import cors             from 'cors';
 import express          from 'express';
 import expressValidator from 'express-validator';
+import logger           from 'morgan-body';
 import path             from 'path';
 
 import config           from './config';
@@ -14,6 +15,8 @@ let app = express();
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(expressValidator());
 app.use(bodyParser.json());
+
+logger(app);
 
 app.use(cors());
 
