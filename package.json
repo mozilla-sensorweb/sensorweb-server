@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "NODE_END=development nodemon -q --watch src --exec babel-node -- src/server.js",
-    "test": "NODE_ENV=test ADMIN_PASS=TestPassword.1 JWT_SECRET=secret ./node_modules/.bin/mocha --compilers js:babel-register test/*js",
+    "start": "nodemon -q --watch src --exec babel-node -- src/server.js",
+    "test": "NODE_ENV=test ./node_modules/.bin/mocha --compilers js:babel-register test/*js",
     "test-watch": "nodemon -q -x npm test"
   },
   "keywords": [],

@@ -1,4 +1,7 @@
 {
+  adminPass: "default",
+  adminSessionSecret: "default",
+  env: "dev",
   port: 8080,
   version: 1
 }
