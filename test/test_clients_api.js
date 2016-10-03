@@ -118,7 +118,10 @@ describe('DELETE ' + endpointPrefix + 'clients/:key', () => {
             .expect(204)
             .end((err, res) => {
               res.status.should.be.equal(204);
-              done();
+              clients.get(client.key).then(result => {
+                should.not.exist(result);
+                done();
+              });
             });
     });
   });

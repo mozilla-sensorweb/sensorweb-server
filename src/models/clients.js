@@ -31,24 +31,30 @@ exports.getAll = () => {
 }
 
 exports.get = (key, includeSecret = false) => {
-  return new Promise((resolve, reject) => {
-    if (includeSecret) {
-      return resolve(memStore[key]);
+    if (!memStore[key]) {
+      return Promise.resolve(null);
     }
 
-    resolve(Object.assign({}, memStore[key], { secret: undefined }));
-  });
+    if (includeSecret) {
+      return Promise.resolve(memStore[key]);
+    }
+
+    return Promise.resolve(
+      Object.assign({}, memStore[key], { secret: undefined })
+    );
 }
 
 exports.remove = key => {
-  if (memStore[key]) {
-    delete memStore[key];
-  }
+  Object.keys(memStore).forEach(name => {
+    if (memStore[name].key === key) {
+      delete memStore[name];
+      return Promise.resolve();
+    }
+  });
   return Promise.resolve();
 }
 
 exports.clear = () => {
-  console.log('Clear', config.get('env'));
   if (config.get('env') !== 'test') {
     return Promise.resolve();
   }
