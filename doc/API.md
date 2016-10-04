@@ -96,10 +96,10 @@ Successful requests will produce a "201 Created" response with a session token i
 The token is provided in the body of the response:
 
 ```ssh
-Connection →keep-alive
-Content-Length →156
-Content-Type →application/json; charset=utf-8
-Date →Fri, 23 Sep 2016 16:22:39 GMT
+Connection: keep-alive
+Content-Length: 156
+Content-Type: application/json; charset=utf-8
+Date: Fri, 23 Sep 2016 16:22:39 GMT
 {
   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImFkbWluIiwic2NvcGUiOiJhZG1pbiIsImlhdCI6MTQ3NDY0Nzc1OX0.R1vQOLVg8A-6i5QaZQVOGAzImiPvgAdkWiODYhYiNn4"
 }
@@ -124,11 +124,11 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImFkbWluIiwic
 ### Response
 Successful requests will produce a "201 Created" response with a body containing the name and the generated API key and secret.
 
-Access-Control-Allow-Origin →*
-Connection →keep-alive
-Content-Length →198
-Content-Type →application/json; charset=utf-8
 ```ssh
+Access-Control-Allow-Origin: *
+Connection: keep-alive
+Content-Length: 198
+Content-Type: application/json; charset=utf-8
 {
     "name": "SensorWebClient",
     "key": "766a06dab7358b6aec17891df1fe8555",
@@ -150,10 +150,10 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImFkbWluIiwic
 Successful requests will produce a 200 response with an array containing the list of registered API clients.
 
 ```ssh
-Access-Control-Allow-Origin →*
-Connection →keep-alive
-Content-Length →60
-Content-Type →application/json; charset=utf-8
+Access-Control-Allow-Origin: *
+Connection: keep-alive
+Content-Length: 60
+Content-Type: application/json; charset=utf-8
 [
     {
         "name": "SensorWebClient",
