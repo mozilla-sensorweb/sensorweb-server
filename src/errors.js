@@ -18,7 +18,8 @@ exports.errors = errors;
 
 // Model errors.
 const modelErrors = {
-  RECORD_ALREADY_EXISTS: 'RecordAlreadyExists'
+  RECORD_ALREADY_EXISTS: 'RecordAlreadyExists',
+  UNSUPPORTED_AUTH_METHOD: 'UnsupportedAuthMethod'
 };
 exports.modelErrors = modelErrors;
 
