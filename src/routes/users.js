@@ -19,6 +19,7 @@ router.post('/auth', (req, res) => {
     return res.sendStatus(401);
   }
 
+  // XXX Add expiresIn value.
   const token = jwt.sign({
     id: 'admin',
     scope: 'admin'

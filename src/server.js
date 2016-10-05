@@ -5,6 +5,8 @@ import expressValidator from 'express-validator';
 import logger           from 'morgan-body';
 import path             from 'path';
 
+import auth             from './middlewares/auth'
+
 import config           from './config';
 
 import clients          from './routes/clients';
@@ -22,7 +24,7 @@ app.use(cors());
 
 const endpointPrefix = '/api/v' + config.get('version');
 
-app.use(endpointPrefix + '/clients', clients);
+app.use(endpointPrefix + '/clients', auth(['admin']), clients);
 app.use(endpointPrefix + '/users', users);
 
 app.listen(8080, () => console.log('Running on localhost:8080'));
