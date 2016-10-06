@@ -8,10 +8,12 @@ import config     from '../src/config';
 import {
   BAD_REQUEST,
   errnos,
-  ERRNO_INVALID_API_CLIENT_NAME,
   ERRNO_FORBIDDEN,
+  ERRNO_INVALID_API_CLIENT_NAME,
+  ERRNO_UNAUTHORIZED,
   errors,
-  FORBIDDEN
+  FORBIDDEN,
+  UNAUTHORIZED
 } from '../src/errors';
 
 const endpointPrefix = '/api/v' + config.get('version');
@@ -31,6 +33,19 @@ describe('Clients API', () => {
   });
 
   describe('POST ' + endpointPrefix + '/clients', () => {
+    it('should response 401 Unauthorized if there is no auth header', done => {
+      server.post(endpointPrefix + '/clients')
+            .expect('Content-type', /json/)
+            .expect(401)
+            .end((err, res) => {
+              res.status.should.be.equal(401);
+              res.body.code.should.be.equal(401);
+              res.body.errno.should.be.equal(errnos[ERRNO_UNAUTHORIZED]);
+              res.body.error.should.be.equal(errors[UNAUTHORIZED]);
+              done();
+            });
+    });
+
     it('should response 400 BadRequest if name param is missing', done => {
       server.post(endpointPrefix + '/clients')
             .set('Authorization', 'Bearer ' + token)
@@ -95,6 +110,19 @@ describe('Clients API', () => {
   });
 
   describe('GET ' + endpointPrefix + '/clients', () => {
+    it('should response 401 Unauthorized if there is no auth header', done => {
+      server.get(endpointPrefix + '/clients')
+            .expect('Content-type', /json/)
+            .expect(401)
+            .end((err, res) => {
+              res.status.should.be.equal(401);
+              res.body.code.should.be.equal(401);
+              res.body.errno.should.be.equal(errnos[ERRNO_UNAUTHORIZED]);
+              res.body.error.should.be.equal(errors[UNAUTHORIZED]);
+              done();
+            });
+    });
+
     it('should response 200 OK with an array containing the registered client',
        done => {
       server.get(endpointPrefix + '/clients')
@@ -130,6 +158,19 @@ describe('Clients API', () => {
   });
 
   describe('DELETE ' + endpointPrefix + 'clients/:key', () => {
+    it('should response 401 Unauthorized if there is no auth header', done => {
+      server.delete(endpointPrefix + '/clients/whatever')
+            .expect('Content-type', /json/)
+            .expect(401)
+            .end((err, res) => {
+              res.status.should.be.equal(401);
+              res.body.code.should.be.equal(401);
+              res.body.errno.should.be.equal(errnos[ERRNO_UNAUTHORIZED]);
+              res.body.error.should.be.equal(errors[UNAUTHORIZED]);
+              done();
+            });
+    });
+
     it('should response 204 NoResponse if request is to remove existing client',
        done => {
       clients.create('test').then(client => {
