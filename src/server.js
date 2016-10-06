@@ -18,7 +18,9 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(expressValidator());
 app.use(bodyParser.json());
 
-logger(app);
+if (config.get('env') !== 'test') {
+  logger(app);
+}
 
 app.use(cors());
 
