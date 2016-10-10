@@ -5,6 +5,13 @@ import path    from 'path';
 
 const defaultValue = 'default';
 
+const avoidDefault = value => {
+  // convict does not allow config entries without defaults.
+  if (value === defaultValue) {
+    throw new Error('Do not use default secrets');
+  }
+};
+
 const conf = convict({
   adminPass: {
     doc: 'The password for the admin user. Follow OWASP guidelines for passwords',
@@ -19,12 +26,7 @@ const conf = convict({
   },
   adminSessionSecret: {
     doc: 'Secret to sign admin session tokens',
-    format: value => {
-      // convict does not allow config entries without defaults.
-      if (value === defaultValue) {
-        throw new Error('Do not use default secrets');
-      }
-    },
+    format: avoidDefault,
     default: defaultValue
   },
   env: {
@@ -39,10 +41,30 @@ const conf = convict({
     default: 8080,
     env: 'PORT'
   },
+  sandboxPath: {
+    doc: 'SensorThings sandbox API path',
+    default: '/st-playground/proxy/v1.0'
+  },
+  sandboxServer: {
+    doc: 'SensorThings sandbox API server',
+    format: 'url',
+    default: 'https://pg-api.sensorup.com'
+  },
+  sandboxToken: {
+    doc: 'SensorThings sandbox API credentials',
+    format: avoidDefault,
+    default: defaultValue
+  },
   version: {
-    doc: 'API version.',
-    format: Number,
-    default: 1
+    doc: 'API version. We follow SensorThing\'s versioning format as described at http://docs.opengeospatial.org/is/15-078r6/15-078r6.html#34',
+    format: value => {
+      const pattern = /^(\d+\.)?(\d)$/g;
+      const match = pattern.exec(value);
+      if (match === null) {
+        throw new Error('Invalid version number');
+      }
+    },
+    default: '1.0'
   }
 });
 
