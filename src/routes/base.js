@@ -2,18 +2,17 @@ import express  from 'express';
 
 import config   from '../config';
 
-const resources = {
-  DATASTREAMS           : 'Datastreams',
-  FEATURES_OF_INTEREST  : 'FeaturesOfInterest',
-  HISTORICAL_LOCATIONS  : 'HistoricalLocations',
-  LOCATIONS             : 'Locations',
-  OBSERVATIONS          : 'Observations',
-  SENSORS               : 'Sensors',
-  THINGS                : 'Things'
-};
+const resourceEndpoints = [
+  'Datastreams',
+  'FeaturesOfInterest',
+  'HistoricalLocations',
+  'Locations',
+  'Observations',
+  'Sensors',
+  'Things'
+];
 
-exports.resources = resources;
-Object.keys(resources).forEach(key => exports[key] = key);
+exports.resourceEndpoints = resourceEndpoints;
 
 let router = express.Router();
 
@@ -22,10 +21,10 @@ let router = express.Router();
 router.get('/', (req, res) => {
   const prepath = req.protocol + '://' + req.hostname + req.baseUrl + '/';
 
-  const value = Object.keys(resources).map(key => {
+  const value = resourceEndpoints.map(key => {
     return {
-      'name': resources[key],
-      'url': prepath + resources[key]
+      'name'  : key,
+      'url'   : prepath + key
     };
   });
 

@@ -11,14 +11,21 @@
  * Add the access token to your 'sandboxToken' config file entry.
  */
 
-import proxy  from 'express-http-proxy';
+import proxy                   from 'express-http-proxy';
 
-import config from '../config';
+import config                  from '../config';
+import { resourceEndpoints }   from '../routes/base';
 
 export default proxy(config.get('sandboxServer'), {
   filter: (req, res) => {
-    // The paths listed in the array are not handled by the proxy.
-    if (['/', '/clients', '/users'].indexOf(req.path) === -1) {
+    const matches = resourceEndpoints.filter(endpoint => {
+      const regexp = new RegExp('^((?!' + endpoint + ').)*$');
+      return req.path.match(regexp) == null;
+    });
+
+    // Only the paths listed in the resourcesEndpoints array are handled
+    // by the proxy.
+    if (matches.length) {
       return true;
     }
   },
@@ -28,7 +35,7 @@ export default proxy(config.get('sandboxServer'), {
 
     proxyReq.path = config.get('sandboxPath') + proxyReq.path;
 
-    console.log('Proxified request', proxyReq);
+    //console.log('Proxified request', proxyReq);
 
     return proxyReq;
   }
