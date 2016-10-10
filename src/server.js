@@ -13,6 +13,8 @@ import base             from './routes/base';
 import clients          from './routes/clients';
 import users            from './routes/users';
 
+import sensorup         from './utils/sensorup';
+
 let app = express();
 
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -26,6 +28,11 @@ if (config.get('env') !== 'test') {
 app.use(cors());
 
 const endpointPrefix = '/api/v' + config.get('version');
+
+// SensorUp's sandbox.
+// We use this sandbox until we have our own implementation of the
+// SensorThings API in place.
+app.use(endpointPrefix + '/', sensorup);
 
 app.use(endpointPrefix + '/clients', auth(['admin']), clients);
 app.use(endpointPrefix + '/users', users);

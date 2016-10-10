@@ -3,5 +3,8 @@
   adminSessionSecret: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9",
   env: "test",
   port: 0,
+  sandboxToken: "a8654152-74c0-41dd-a954-bcab50ff99d4",
+  sandboxServer: "https://pg-api.sensorup.com",
+  sandboxPath: "/st-playground/proxy/v1.0",
   version: "1.0"
 }
