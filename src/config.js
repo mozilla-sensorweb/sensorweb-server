@@ -40,9 +40,15 @@ const conf = convict({
     env: 'PORT'
   },
   version: {
-    doc: 'API version.',
-    format: Number,
-    default: 1
+    doc: 'API version. We follow SensorThing\'s versioning format as described at http://docs.opengeospatial.org/is/15-078r6/15-078r6.html#34',
+    format: value => {
+      const pattern = /^(\d+\.)?(\d)$/g;
+      const match = pattern.exec(value);
+      if (match === null) {
+        throw new Error('Invalid version number');
+      }
+    },
+    default: '1.0'
   }
 });
 

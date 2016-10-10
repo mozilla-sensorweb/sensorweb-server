@@ -3,5 +3,5 @@
   adminSessionSecret: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9",
   env: "test",
   port: 0,
-  version: 1
+  version: "1.0"
 }

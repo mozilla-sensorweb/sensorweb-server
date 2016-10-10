@@ -9,6 +9,7 @@ import auth             from './middlewares/auth'
 
 import config           from './config';
 
+import base             from './routes/base';
 import clients          from './routes/clients';
 import users            from './routes/users';
 
@@ -28,6 +29,9 @@ const endpointPrefix = '/api/v' + config.get('version');
 
 app.use(endpointPrefix + '/clients', auth(['admin']), clients);
 app.use(endpointPrefix + '/users', users);
+
+// SensorThings API endpoints.
+app.use(endpointPrefix + '/', base);
 
 app.listen(8080, () => console.log('Running on localhost:8080'));
 
