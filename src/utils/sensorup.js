@@ -35,8 +35,6 @@ export default proxy(config.get('sandboxServer'), {
 
     proxyReq.path = config.get('sandboxPath') + proxyReq.path;
 
-    //console.log('Proxified request', proxyReq);
-
     return proxyReq;
   }
 });
