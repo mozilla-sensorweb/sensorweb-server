@@ -3,58 +3,71 @@ import { randomBytes } from 'crypto';
 import config                    from '../config';
 import { RECORD_ALREADY_EXISTS } from '../errors';
 
-// XXX temporary store clients in memory.
-let memStore = {};
+import store  from '../pg_store';
+
+const DEBUG = false;
+
+function debug(msg) {
+  DEBUG && console.log(`[client.js] ${msg}`);
+}
 
 exports.create = name => {
-  if (memStore[name]) {
-    return Promise.reject(new Error(RECORD_ALREADY_EXISTS));
-  }
-  const key = randomBytes(8).toString('hex');
-  const secret = randomBytes(64).toString('hex');
-  memStore[name] = {
-    name,
-    key,
-    secret
-  };
-  return Promise.resolve(memStore[name]);
+  debug(`create ${name}`);
+  return store.hasName(name).then(
+    () => {
+      debug('This name already exists');
+      return Promise.reject(new Error(RECORD_ALREADY_EXISTS));
+    },
+    () => {
+      const key = randomBytes(8).toString('hex');
+      const secret = randomBytes(64).toString('hex');
+      let client = {
+        name,
+        key,
+        secret
+      };
+      debug(`adding ${JSON.stringify(client)}`);
+      return store.add(client);
+    });
 }
 
 exports.getAll = () => {
-  return Promise.resolve(Object.keys(memStore).map(key => {
-    // Do not expose secret.
-    return Object.assign({}, memStore[key], { secret: undefined });
-  }));
+  debug(`getAll`);
+  return store.getAll().then(
+    (clients) => {
+      return Promise.resolve(Object.keys(clients).map(key => {
+        // Do not expose secret.
+        return Object.assign({}, clients[key], { secret: undefined });
+      }));
+    });
 }
 
 exports.get = (key, includeSecret = false) => {
-    if (!memStore[key]) {
+  debug(`get ${key} ${includeSecret}`);
+  return store.hasKey(key).then(
+    (client) => {
+      if (includeSecret) {
+        return Promise.resolve(client);
+      }
+
+      return Promise.resolve(
+        Object.assign({}, client, { secret: undefined })
+      );
+    },
+    () => {
       return Promise.resolve(null);
-    }
-
-    if (includeSecret) {
-      return Promise.resolve(memStore[key]);
-    }
-
-    return Promise.resolve(
-      Object.assign({}, memStore[key], { secret: undefined })
-    );
+    });
 }
 
 exports.remove = key => {
-  Object.keys(memStore).forEach(name => {
-    if (memStore[name].key === key) {
-      delete memStore[name];
-      return Promise.resolve();
-    }
-  });
-  return Promise.resolve();
+  debug(`remove ${key}`);
+  return store.removeByKey(key);
 }
 
 exports.clear = () => {
+  debug(`clear`);
   if (config.get('env') !== 'test') {
     return Promise.resolve();
   }
-  memStore = {};
-  return Promise.resolve();
+  return store.clear();
 }
