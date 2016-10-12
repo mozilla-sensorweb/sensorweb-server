@@ -157,7 +157,7 @@ describe('Clients API', () => {
     });
   });
 
-  describe('DELETE ' + endpointPrefix + 'clients/:key', () => {
+  describe('DELETE ' + endpointPrefix + '/clients/:key', () => {
     it('should response 401 Unauthorized if there is no auth header', done => {
       server.delete(endpointPrefix + '/clients/whatever')
             .expect('Content-type', /json/)
