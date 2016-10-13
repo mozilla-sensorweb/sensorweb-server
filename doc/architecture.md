@@ -24,7 +24,7 @@ Frontend to manage things like API credentials and users. The code for this comp
 
 ## External components
 ### Telemetry
-TBD. We will probably reuse the [work done for Firefox OS](https://wiki.mozilla.org/Gaia/Metrics)
+We will be using [Metrics for Mozilla Connected Devices Projects](https://github.com/tamarahills/metrics_controller)
 
 ### Identity Provider
 TBD. We will probably use [Firefox Accounts](https://developer.mozilla.org/en-US/docs/Mozilla/Tech/Firefox_Accounts).
