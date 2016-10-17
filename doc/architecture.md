@@ -36,4 +36,4 @@ TBD. We will probably use [Firefox Accounts](https://developer.mozilla.org/en-US
 [GCM](https://developers.google.com/cloud-messaging/)
 
 ## Storage
-[Crate.io](https://crate.io/)
+<s>[Crate.io](https://crate.io/)</s> [PostgreSQL](https://www.postgresql.org/) and [PostGIS](http://postgis.net/)
