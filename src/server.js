@@ -40,7 +40,7 @@ app.use(endpointPrefix + '/users', users);
 // SensorThings API endpoints.
 app.use(endpointPrefix + '/', base);
 
-let port = config.get('port');
+const port = config.get('port');
 app.listen(port, () => console.log(`Running on localhost:${port}`));
 
 exports = module.exports = app;
