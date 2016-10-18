@@ -33,6 +33,14 @@ describe('db for api clients', () => {
       );
   });
 
+  it('should not have the `key1` key', done => {
+    db.hasKey('key1')
+      .then(
+        () => { fail(done); },
+        () => { done(); }
+      );
+  });
+
   it('should add a test client', done => {
     const client = { name: 'test', key: 'key1', secret: 'secret1' };
     db.add(client).then(
@@ -59,7 +67,15 @@ describe('db for api clients', () => {
       );
   });
 
-  it('should have have one client registered', done => {
+  it('should have the `key1` key', done => {
+    db.hasKey('key1')
+      .then(
+        () => { done() },
+        () => { fail(done); }
+      );
+  });
+
+  it('should have one client registered', done => {
     db.getAll()
       .then(
         (res) => {

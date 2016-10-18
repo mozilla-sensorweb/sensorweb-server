@@ -44,18 +44,18 @@ function init() {
 
  // All the functions are returning promises.
  const store = {
-   hasKey: (key) => {
+   hasKey: key => {
      debug(`hasKey ${key}`);
      return pool.query('SELECT * FROM api_clients WHERE key = $1', [key])
        .then(res => {
          if (res.rowCount == 0) {
            return Promise.reject();
          }
-         return resolve(res.rows[0]);
+         return Promise.resolve(res.rows[0]);
        });
    },
 
-   hasName: (name) => {
+   hasName: name => {
      debug(`hasName ${name}`);
      return pool.query('SELECT * FROM api_clients WHERE name = $1', [name])
        .then(res => {
@@ -66,13 +66,13 @@ function init() {
        });
    },
 
-   removeByKey: (key) => {
+   removeByKey: key => {
      debug(`removeByKey ${key}`);
      return pool.query('DELETE FROM api_clients WHERE key = $1', [key])
        .then(() => { return Promise.resolve(); });
    },
 
-   add: (client) => {
+   add: client => {
      debug(`add ${JSON.stringify(client)}`);
      return pool.query('INSERT INTO api_clients (name, key, secret) VALUES ($1, $2, $3)',
                   [client.name, client.key, client.secret]).then(res => {
