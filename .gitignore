@@ -14,3 +14,7 @@ node_modules
 config/dev.json
 config/stage.json
 config/prod.json
+
+# coverage data
+coverage/
+.nyc_output/

@@ -5,8 +5,10 @@
   "main": "index.js",
   "scripts": {
     "start": "nodemon -q --watch src --exec babel-node -- src/server.js",
-    "test": "NODE_ENV=test ./node_modules/.bin/mocha --compilers js:babel-register test/*js",
-    "test-watch": "nodemon -q -x npm test"
+    "test-nocoverage": "NODE_ENV=test ./node_modules/.bin/mocha --compilers js:babel-register test/*js",
+    "test-watch": "nodemon -q -x npm test",
+    "test": "./node_modules/.bin/nyc npm run test-nocoverage",
+    "coverage": "./node_modules/.bin/nyc report --reporter=text-lcov | ./node_modules/coveralls/bin/coveralls.js"
   },
   "keywords": [],
   "author": "Mozilla Connected Devices",
@@ -19,8 +21,11 @@
     "babel-cli": "^6.14.0",
     "babel-preset-es2015": "^6.14.0",
     "babel-register": "^6.16.3",
+    "coveralls": "^2.11.14",
+    "istanbul": "^0.4.5",
     "mocha": "^3.1.0",
     "nodemon": "^1.10.2",
+    "nyc": "^8.3.1",
     "should": "^11.1.0",
     "supertest": "^2.0.0"
   },
@@ -36,7 +41,16 @@
     "jsonwebtoken": "^7.1.9",
     "lodash": "^4.15.0",
     "morgan-body": "^0.9.1",
+    "pg": "^6.1.0",
     "on-headers": "^1.0.1",
     "owasp-password-strength-test": "^1.3.0"
+  },
+  "config": {
+    "blanket": {
+      "pattern": "//\/[\\w-]+\\.js$/",
+      "data-cover-never": [
+        "node_modules"
+      ]
+    }
   }
 }
