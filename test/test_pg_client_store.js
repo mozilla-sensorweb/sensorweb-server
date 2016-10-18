@@ -2,48 +2,51 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import db  from '../src/pg_store';
+import db  from '../src/models/pg_store';
 import should from 'should';
 
+function fail(done) {
+  should.ok(false);
+  done();
+}
+
 describe('db for api clients', () => {
-  it('1. should succeed to clear db', done => {
+  before(done => {
     db.clear().then(done);
   });
 
-  it('2. should be an empty db', done => {
+  it('should be an empty db', done => {
     db.getAll().then(
       (res) => {
         res.length.should.be.equal(0);
         done();
       },
-      () => {
-        should.ok(false);
-      }
+      () => { fail(done); }
     );
   });
 
-  it('3. should not have the `test` name', done => {
+  it('should not have the `test` name', done => {
     db.hasName('test')
       .then(
-        () => { should.ok(false); },
+        () => { fail(done); },
         () => { done(); }
       );
   });
 
-  it('4. should add a test client', done => {
+  it('should add a test client', done => {
     const client = { name: 'test', key: 'key1', secret: 'secret1' };
     db.add(client).then(
       (res) => {
-        res.name.should.be.equal('test');
-        res.key.should.be.equal('key1');
-        res.secret.should.be.equal('secret1');
+        res.name.should.be.equal(client.name);
+        res.key.should.be.equal(client.key);
+        res.secret.should.be.equal(client.secret);
         done();
       },
-      () => { should.ok(false); }
+      () => { fail(done); }
     );
   });
 
-  it('5. should have the `test` name', done => {
+  it('should have the `test` name', done => {
     db.hasName('test')
       .then(
         (res) => {
@@ -52,11 +55,11 @@ describe('db for api clients', () => {
           res.secret.should.be.equal('secret1');
           done();
         },
-        () => { should.ok(false); }
+        () => { fail(done); }
       );
   });
 
-  it('6. should have have one client registered', done => {
+  it('should have have one client registered', done => {
     db.getAll()
       .then(
         (res) => {
@@ -66,24 +69,24 @@ describe('db for api clients', () => {
           res[0].secret.should.be.equal('secret1');
           done();
         },
-        () => { should.ok(false); }
+        () => { fail(done); }
       );
   });
 
-  it('7. should add a second client', done => {
+  it('should add a second client', done => {
     const client = { name: 'test2', key: 'key2', secret: 'secret2' };
     db.add(client).then(
       (res) => {
-        res.name.should.be.equal('test2');
-        res.key.should.be.equal('key2');
-        res.secret.should.be.equal('secret2');
+        res.name.should.be.equal(client.name);
+        res.key.should.be.equal(client.key);
+        res.secret.should.be.equal(client.secret);
         done();
       },
-      () => { should.ok(false); }
+      () => { fail(done); }
     );
   });
 
-  it('8. should have have two client registered', done => {
+  it('should have have two client registered', done => {
     db.getAll()
       .then(
         (res) => {
@@ -96,28 +99,26 @@ describe('db for api clients', () => {
           res[1].secret.should.be.equal('secret2');
           done();
         },
-        () => { should.ok(false); }
+        () => { fail(done); }
       );
   });
 
-  it('9. should fail to add a client with the same name', done => {
+  it('should fail to add a client with the same name', done => {
     const client = { name: 'test2', key: 'key2', secret: 'secret2' };
     db.add(client).then(
-      (res) => {
-        should.ok(false);
-      },
+      (res) => { fail(done); },
       () => { done(); }
     );
   });
 
-  it('10. should remove a client by key', done => {
+  it('should remove a client by key', done => {
     db.removeByKey('key1').then(
       done,
-      () => { should.ok(false); }
+      () => { fail(done); }
     );
   });
 
-  it('11. should have have one client registered', done => {
+  it('should have have one client registered', done => {
     db.getAll()
       .then(
         (res) => {
@@ -127,23 +128,11 @@ describe('db for api clients', () => {
           res[0].secret.should.be.equal('secret2');
           done();
         },
-        () => { should.ok(false); }
+        () => { fail(done); }
       );
   });
 
-  it('12. should succeed to cleanup db', done => {
+  after(done => {
     db.clear().then(done);
-  });
-
-  it('13. should be an empty db', done => {
-    db.getAll().then(
-      (res) => {
-        res.length.should.be.equal(0);
-        done();
-      },
-      () => {
-        should.ok(false);
-      }
-    );
   });
 });

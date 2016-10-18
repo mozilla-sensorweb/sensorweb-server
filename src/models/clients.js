@@ -3,7 +3,7 @@ import { randomBytes } from 'crypto';
 import config                    from '../config';
 import { RECORD_ALREADY_EXISTS } from '../errors';
 
-import store  from '../pg_store';
+import store  from './pg_store';
 
 const DEBUG = false;
 
@@ -21,7 +21,7 @@ exports.create = name => {
     () => {
       const key = randomBytes(8).toString('hex');
       const secret = randomBytes(64).toString('hex');
-      let client = {
+      const client = {
         name,
         key,
         secret
