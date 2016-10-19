@@ -12,16 +12,71 @@ const avoidDefault = value => {
   }
 };
 
-const conf = convict({
+const password = value => {
+  const adminPass = owasp.test(value);
+  if (!adminPass.strong) {
+    adminPass.errors.forEach(error => console.error(error));
+    throw new Error('Admin pass is default or not strong enough.');
+  }
+};
+
+const remoteSTConfig = {
+  server: {
+    doc: 'SensorThings remote API server',
+    format: 'url',
+    default: 'https://pg-api.sensorup.com'
+  },
+  path: {
+    doc: 'SensorThings remote API path',
+    default: '/st-playground/proxy/v1.0'
+  },
+  credentials: {
+    header: {
+      doc: 'SensorThings auth header name',
+      format: avoidDefault,
+      default: defaultValue
+    },
+    value: {
+      doc: 'SensorThings auth header value',
+      format: avoidDefault,
+      default: defaultValue
+    }
+  }
+};
+
+const localSTConfig = {
+  db: {
+    host: {
+      doc: 'SensorThings DB host',
+      default: 'localhost'
+    },
+    port: {
+      doc: 'SensorThings DB port',
+      format: 'port',
+      default: 5432
+    },
+    name: {
+      doc: 'SensorThings DB name',
+      format: avoidDefault,
+      default: 'postgres'
+    },
+    user: {
+      doc: 'SensorThings DB user',
+      format: avoidDefault,
+      default: defaultValue
+    },
+    password: {
+      doc: 'SensorThings DB password',
+      format: password,
+      default: defaultValue
+    }
+  }
+};
+
+let commonConf = {
   adminPass: {
     doc: 'The password for the admin user. Follow OWASP guidelines for passwords',
-    format: value => {
-      const adminPass = owasp.test(value);
-      if (!adminPass.strong) {
-        adminPass.errors.forEach(error => console.error(error));
-        throw new Error('Admin pass is default or not strong enough.');
-      }
-    },
+    format: password,
     default: 'invalid'
   },
   adminSessionSecret: {
@@ -41,20 +96,7 @@ const conf = convict({
     default: 8080,
     env: 'PORT'
   },
-  sandboxPath: {
-    doc: 'SensorThings sandbox API path',
-    default: '/st-playground/proxy/v1.0'
-  },
-  sandboxServer: {
-    doc: 'SensorThings sandbox API server',
-    format: 'url',
-    default: 'https://pg-api.sensorup.com'
-  },
-  sandboxToken: {
-    doc: 'SensorThings sandbox API credentials',
-    format: avoidDefault,
-    default: defaultValue
-  },
+  sensorthings: {},
   version: {
     doc: 'API version. We follow SensorThing\'s versioning format as described at http://docs.opengeospatial.org/is/15-078r6/15-078r6.html#34',
     format: value => {
@@ -66,7 +108,9 @@ const conf = convict({
     },
     default: '1.0'
   }
-});
+};
+
+let conf = convict(commonConf);
 
 // Handle configuration files. You can specify a CSV list of configuration
 // files to process, which will be overlayed in order, in the CONFIG_FILES
@@ -75,6 +119,20 @@ const envConfig = path.join(__dirname, '/../config', conf.get('env') + '.json');
 let files = (envConfig + ',' + process.env.CONFIG_FILES)
     .split(',')
     .filter(fs.existsSync);
+
+conf.loadFile(files);
+
+const currentSTConfig = conf.get('sensorthings');
+
+if (currentSTConfig.local) {
+  commonConf.sensorthings.local = localSTConfig;
+  conf = convict(commonConf);
+} else if (currentSTConfig.remote) {
+  commonConf.sensorthings.remote = remoteSTConfig;
+  conf = convict(commonConf);
+} else {
+  throw new Error('SensorThings needs at least a local or remote configuration');
+}
 
 conf.loadFile(files);
 conf.validate();
