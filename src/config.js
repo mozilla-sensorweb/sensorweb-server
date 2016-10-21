@@ -20,60 +20,7 @@ const password = value => {
   }
 };
 
-const remoteSTConfig = {
-  server: {
-    doc: 'SensorThings remote API server',
-    format: 'url',
-    default: 'https://pg-api.sensorup.com'
-  },
-  path: {
-    doc: 'SensorThings remote API path',
-    default: '/st-playground/proxy/v1.0'
-  },
-  credentials: {
-    header: {
-      doc: 'SensorThings auth header name',
-      format: avoidDefault,
-      default: defaultValue
-    },
-    value: {
-      doc: 'SensorThings auth header value',
-      format: avoidDefault,
-      default: defaultValue
-    }
-  }
-};
-
-const localSTConfig = {
-  db: {
-    host: {
-      doc: 'SensorThings DB host',
-      default: 'localhost'
-    },
-    port: {
-      doc: 'SensorThings DB port',
-      format: 'port',
-      default: 5432
-    },
-    name: {
-      doc: 'SensorThings DB name',
-      format: avoidDefault,
-      default: 'postgres'
-    },
-    user: {
-      doc: 'SensorThings DB user',
-      format: avoidDefault,
-      default: defaultValue
-    },
-    password: {
-      doc: 'SensorThings DB password',
-      format: password,
-      default: defaultValue
-    }
-  }
-};
-
-let commonConf = {
+const conf = convict({
   adminPass: {
     doc: 'The password for the admin user. Follow OWASP guidelines for passwords',
     format: password,
@@ -96,7 +43,50 @@ let commonConf = {
     default: 8080,
     env: 'PORT'
   },
-  sensorthings: {},
+  db: {
+    host: {
+      doc: 'Hostname where PostgreSQL is running',
+      format: 'url',
+      default: 'localhost'
+    },
+    port: {
+      doc: 'Port where PostgreSQL is running',
+      format: 'port',
+      default: 5432
+    },
+    name: {
+      doc: 'Database name'
+    },
+    user: {
+      doc: 'Database username'
+    },
+    password: {
+      doc: 'Database password'
+    }
+  },
+  sensorthings: {
+    server: {
+      doc: 'SensorThings remote API server',
+      format: 'url',
+      default: 'https://pg-api.sensorup.com'
+    },
+    path: {
+      doc: 'SensorThings remote API path',
+      default: '/st-playground/proxy/v1.0'
+    },
+    credentials: {
+      header: {
+        doc: 'SensorThings auth header name',
+        format: avoidDefault,
+        default: defaultValue
+      },
+      value: {
+        doc: 'SensorThings auth header value',
+        format: avoidDefault,
+        default: defaultValue
+      }
+    }
+  },
   version: {
     doc: 'API version. We follow SensorThing\'s versioning format as described at http://docs.opengeospatial.org/is/15-078r6/15-078r6.html#34',
     format: value => {
@@ -108,9 +98,7 @@ let commonConf = {
     },
     default: '1.0'
   }
-};
-
-let conf = convict(commonConf);
+});
 
 // Handle configuration files. You can specify a CSV list of configuration
 // files to process, which will be overlayed in order, in the CONFIG_FILES
@@ -122,19 +110,6 @@ let files = (envConfig + ',' + process.env.CONFIG_FILES)
 
 conf.loadFile(files);
 
-const currentSTConfig = conf.get('sensorthings');
-
-if (currentSTConfig.local) {
-  commonConf.sensorthings.local = localSTConfig;
-  conf = convict(commonConf);
-} else if (currentSTConfig.remote) {
-  commonConf.sensorthings.remote = remoteSTConfig;
-  conf = convict(commonConf);
-} else {
-  throw new Error('SensorThings needs at least a local or remote configuration');
-}
-
-conf.loadFile(files);
 conf.validate();
 
 export default conf;

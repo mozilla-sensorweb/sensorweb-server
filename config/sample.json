@@ -3,23 +3,19 @@
   "adminSessionSecret": "default",
   "env": "dev",
   "port": 8080,
+  "db": {
+    "host": "localhost",
+    "port": 5432,
+    "name": "sensorweb",
+    "user": "postgres",
+    "password": "default"
+  },
   "sensorthings": {
-    "remote": {
-      "server": "https://pg-api.sensorup.com",
-      "path": "/st-playground/proxy/v1.0",
-      "credentials": {
-        "header": "St-P-Access-Token",
-        "value": "a8654152-74c0-41dd-a954-bcab50ff99d4"
-      }
-    },
-    "local": {
-      "db": {
-        "host": "localhost",
-        "port": "5432",
-        "name": "default",
-        "user": "default",
-        "password": "default"
-      }
+    "server": "https://pg-api.sensorup.com",
+    "path": "/st-playground/proxy/v1.0",
+    "credentials": {
+      "header": "St-P-Access-Token",
+      "value": "a8654152-74c0-41dd-a954-bcab50ff99d4"
     }
   },
   "version": "1.0"

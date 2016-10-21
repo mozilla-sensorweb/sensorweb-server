@@ -12,15 +12,10 @@ import config                  from '../config';
 import { resourceEndpoints }   from '../routes/base';
 import sensorthings            from 'sensorthings'
 
-const localAPI = config.has('sensorthings.local');
 let sensorthingsAPI;
 
-if (localAPI) {
-  //Init DB
-  sensorthingsAPI = sensorthings;
-} else {
+if (config.has('sensorthings')) {
   /**
-   *
    * At the moment, we are using Sensorup as our remote implementation
    * of the Sensorthings API, but we should be able to proxy to any
    * other remote server.
@@ -31,7 +26,7 @@ if (localAPI) {
    * Add the access token to your 'sensorthings.remote.credentials.token'
    * config file entry.
    */
-  sensorthingsAPI = proxy(config.get('sensorthings.remote.server'), {
+  sensorthingsAPI = proxy(config.get('sensorthings.server'), {
     filter: (req, res) => {
       const matches = resourceEndpoints.filter(endpoint => {
         const regexp = new RegExp('^((?!' + endpoint + ').)*$');
@@ -46,14 +41,17 @@ if (localAPI) {
     },
     decorateRequest: (proxyReq, originalReq) => {
       // Add auth header.
-      const header = config.get('sensorthings.remote.credentials.header');
-      proxyReq.headers[header] = config.get('sensorthings.remote.credentials.value');
+      const header = config.get('sensorthings.credentials.header');
+      proxyReq.headers[header] = config.get('sensorthings.credentials.value');
 
-      proxyReq.path = config.get('sensorthings.remote.path') + proxyReq.path;
+      proxyReq.path = config.get('sensorthings.path') + proxyReq.path;
 
       return proxyReq;
     }
   });
+} else {
+  //Init DB
+  sensorthingsAPI = sensorthings;
 }
 
 export default sensorthingsAPI

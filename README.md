@@ -10,9 +10,17 @@ Before running the server, you will need to install all its dependencies via
 npm install
 ```
 
-The server requires some initial configuration before being able to run. You can create your configuration file in `config/{NODE_ENV}.json`. Take `config/sample.json` as a starting point for your config file.
+The server requires some initial configuration before being able to run.
+You can create your configuration file in `config/{NODE_ENV}.json`.
+Take `config/sample.json` as a starting point for your config file.
 
-Once all dependencies are installed and the config file is in place you can start the server by running:
+The server uses PostgreSQL as the database system, so make sure that you have it
+installed and running on your machine. If you are on a Mac, you can try running
+`scripts/bootstrap-mac.sh` to install and launch PostgreSQL with the default
+configuration.
+
+Once all dependencies are installed and the config file is in place you can
+start the server by running:
 
 ```shell
 npm start
