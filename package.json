@@ -4,11 +4,13 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "coverage": "./node_modules/.bin/nyc report --reporter=text-lcov | ./node_modules/coveralls/bin/coveralls.js",
+    "posttest": "./scripts/posttest.sh",
+    "pretest": "./scripts/pretest.sh",
     "start": "nodemon -q --watch src --exec babel-node -- src/server.js",
     "test-nocoverage": "NODE_ENV=test ./node_modules/.bin/mocha --compilers js:babel-register test/*js",
     "test-watch": "nodemon -q -x npm test",
-    "test": "./node_modules/.bin/nyc npm run test-nocoverage",
-    "coverage": "./node_modules/.bin/nyc report --reporter=text-lcov | ./node_modules/coveralls/bin/coveralls.js"
+    "test": "./node_modules/.bin/nyc npm run test-nocoverage"
   },
   "keywords": [],
   "author": "Mozilla Connected Devices",

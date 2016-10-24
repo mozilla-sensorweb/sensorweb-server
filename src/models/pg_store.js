@@ -4,7 +4,7 @@
 
  // A client datastore backed by PostgreSQL.
 
-import pg  from 'pg';
+import pg     from 'pg';
 import config from '../config';
 
 const DEBUG = false;
@@ -25,12 +25,16 @@ let pool;
 
 // Creates the table.
 function init() {
-  // TODO: get host:port, and user/passwd from the config.
   // It currently connects to the default PostgreSQL instance.
   const db_config = {
-    database: 'sensorweb', //env var: PGDATABASE
+    host: config.get('db.host'),
+    port: config.get('db.port'),
+    database: config.get('db.name'),
+    user: config.get('db.user'),
+    password: config.get('db.password'),
     max: 10, // max number of clients in the pool
-    idleTimeoutMillis: 30000, // how long a client is allowed to remain idle before being closed
+    idleTimeoutMillis: 30000, // how long a client is allowed to remain idle
+                              // before being closed
   };
   pool = new pg.Pool(db_config);
 
