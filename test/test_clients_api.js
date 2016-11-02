@@ -3,7 +3,7 @@ import should     from 'should';
 import supertest  from 'supertest';
 
 import app        from '../src/server';
-import clients    from '../src/models/clients';
+import db         from '../src/models/db';
 import config     from '../src/config';
 import {
   BAD_REQUEST,
@@ -143,16 +143,20 @@ describe('Clients API', () => {
 
     it('should response 200 OK with an empty array',
        done => {
-      clients.clear().then(() => {
-        server.get(endpointPrefix + '/clients')
-              .set('Authorization', 'Bearer ' + token)
-              .expect('Content-type', /json/)
-              .expect(200)
-              .end((err, res) => {
-                res.status.should.be.equal(200);
-                res.body.should.be.instanceof(Array).and.have.lengthOf(0);
-                done();
-              });
+      db().then(models => {
+        models.Clients.destroy({
+          where: {}
+        }).then(() => {
+          server.get(endpointPrefix + '/clients')
+                .set('Authorization', 'Bearer ' + token)
+                .expect('Content-type', /json/)
+                .expect(200)
+                .end((err, res) => {
+                  res.status.should.be.equal(200);
+                  res.body.should.be.instanceof(Array).and.have.lengthOf(0);
+                  done();
+                });
+        });
       });
     });
   });
@@ -173,18 +177,26 @@ describe('Clients API', () => {
 
     it('should response 204 NoResponse if request is to remove existing client',
        done => {
-      clients.create('test').then(client => {
-        server.delete(endpointPrefix + '/clients/' + client.key)
-              .set('Authorization', 'Bearer ' + token)
-              .expect('Content-type', /json/)
-              .expect(204)
-              .end((err, res) => {
-                res.status.should.be.equal(204);
-                clients.get(client.key).then(result => {
-                  should.not.exist(result);
-                  done();
+      db().then(models => {
+        models.Clients.create({
+          name: 'test'
+        }).then(client => {
+          server.delete(endpointPrefix + '/clients/' + client.key)
+                .set('Authorization', 'Bearer ' + token)
+                .expect('Content-type', /json/)
+                .expect(204)
+                .end((err, res) => {
+                  res.status.should.be.equal(204);
+                  models.Clients.findAll({
+                    where: {
+                      key: client.key
+                    }
+                  }).then(result => {
+                    result.should.be.instanceof(Array).and.have.lengthOf(0);
+                    done();
+                  });
                 });
-              });
+        });
       });
     });
 

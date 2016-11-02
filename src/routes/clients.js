@@ -9,7 +9,7 @@
 
 import express from 'express';
 
-import clients from '../models/clients';
+import db      from '../models/db';
 import {
   ApiError,
   BAD_REQUEST,
@@ -18,6 +18,7 @@ import {
   ERRNO_INTERNAL_ERROR,
   ERRNO_INVALID_API_CLIENT_NAME,
   INTERNAL_ERROR,
+  modelErrors,
   RECORD_ALREADY_EXISTS
 } from '../errors';
 
@@ -32,27 +33,32 @@ router.post('/', (req, res) => {
 
   const errors = req.validationErrors();
   if (errors) {
-    return ApiError(res, 400, ERRNO_INVALID_API_CLIENT_NAME, BAD_REQUEST,
-                    JSON.stringify(errors));
+    return ApiError(res, 400, ERRNO_INVALID_API_CLIENT_NAME, BAD_REQUEST);
   }
 
-  clients.create(req.body.name).then(client => {
-    res.status(201).send(client);
-  }).catch(error => {
-    if (error.message && error.message === RECORD_ALREADY_EXISTS) {
-      return ApiError(res, 403, ERRNO_FORBIDDEN, FORBIDDEN);
-    }
-    ApiError(res, 500, ERRNO_INTERNAL_ERROR, INTERNAL_ERROR);
+  db().then(models => {
+    models.Clients.create(req.body).then(client => {
+      res.status(201).send(client);
+    }).catch(error => {
+      if (error.name && error.name === modelErrors[RECORD_ALREADY_EXISTS]) {
+        return ApiError(res, 403, ERRNO_FORBIDDEN, FORBIDDEN);
+      }
+      ApiError(res, 500, ERRNO_INTERNAL_ERROR, INTERNAL_ERROR);
+    });
   });
 });
 
 // Get the list of registered API clients.
 router.get('/', (req, res) => {
-  clients.getAll().then(clients => {
-    res.status(200).send(clients);
-  }).catch(error => {
-    ApiError(res, 500, ERRNO_INTERNAL_ERROR, INTERNAL_ERROR);
-  })
+  db().then(models => {
+    models.Clients.findAll({
+      attributes: ['key', 'name']
+    }).then(clients => {
+      res.status(200).send(clients);
+    }).catch(error => {
+      ApiError(res, 500, ERRNO_INTERNAL_ERROR, INTERNAL_ERROR);
+    });
+  });
 });
 
 // Remove a registered API client.
@@ -61,10 +67,16 @@ router.delete('/:key', (req, res) => {
   if (!key) {
     return res.status(204).send();
   }
-  clients.remove(key).then(() => {
-    res.status(204).send();
-  }).catch(() => {
-    res.status(204).send();
+  db().then(models => {
+    models.Clients.destroy({
+      where: {
+        key
+      }
+    }).then(() => {
+      res.status(204).send();
+    }).catch(() => {
+      res.status(204).send();
+    });
   });
 });
 
