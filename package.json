@@ -10,7 +10,8 @@
     "start": "nodemon -q --watch src --exec babel-node -- src/server.js",
     "test-nocoverage": "NODE_ENV=test ./node_modules/.bin/mocha --compilers js:babel-register test/*js",
     "test-watch": "nodemon -q -x npm test",
-    "test": "./node_modules/.bin/nyc npm run test-nocoverage"
+    "test": "./node_modules/.bin/nyc npm run test-nocoverage",
+    "test-circleci": "./node_modules/.bin/nyc ./node_modules/.bin/mocha --compilers js:babel-register test/*js"
   },
   "keywords": [],
   "author": "Mozilla Connected Devices",
