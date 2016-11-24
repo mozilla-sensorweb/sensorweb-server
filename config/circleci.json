@@ -1,0 +1,22 @@
+{
+  "adminPass": "1.TestPassword.1",
+  "adminSessionSecret": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9",
+  "env": "test",
+  "port": 8080,
+  "db": {
+    "host": "127.0.0.1",
+    "port": 5432,
+    "name": "circle_test",
+    "user": "ubuntu",
+    "password": ""
+  },
+  "sensorthings": {
+    "server": "https://pg-api.sensorup.com",
+    "path": "/st-playground/proxy/v1.0",
+    "credentials": {
+      "header": "St-P-Access-Token",
+      "value": "a8654152-74c0-41dd-a954-bcab50ff99d4"
+    }
+  },
+  "version": "1.0"
+}

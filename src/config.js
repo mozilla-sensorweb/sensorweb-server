@@ -33,7 +33,7 @@ const conf = convict({
   },
   env: {
     doc: 'The application environment.',
-    format: ['dev', 'test', 'stage', 'prod'],
+    format: ['dev', 'test', 'stage', 'prod', 'circleci'],
     default: 'dev',
     env: 'NODE_ENV'
   },
