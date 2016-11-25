@@ -68,21 +68,19 @@ const conf = convict({
     server: {
       doc: 'SensorThings remote API server',
       format: 'url',
-      default: 'https://pg-api.sensorup.com'
+      default: 'http://localhost'
     },
     path: {
       doc: 'SensorThings remote API path',
-      default: '/st-playground/proxy/v1.0'
+      default: defaultValue
     },
     credentials: {
       header: {
         doc: 'SensorThings auth header name',
-        format: avoidDefault,
         default: defaultValue
       },
       value: {
         doc: 'SensorThings auth header value',
-        format: avoidDefault,
         default: defaultValue
       }
     }
@@ -90,13 +88,13 @@ const conf = convict({
   version: {
     doc: 'API version. We follow SensorThing\'s versioning format as described at http://docs.opengeospatial.org/is/15-078r6/15-078r6.html#34',
     format: value => {
-      const pattern = /^(\d+\.)?(\d)$/g;
+      const pattern = /^v(\d+\.)?(\d)$/g;
       const match = pattern.exec(value);
       if (match === null) {
         throw new Error('Invalid version number');
       }
     },
-    default: '1.0'
+    default: 'v1.0'
   }
 });
 

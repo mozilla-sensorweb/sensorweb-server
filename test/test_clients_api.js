@@ -16,7 +16,7 @@ import {
   UNAUTHORIZED
 } from '../src/errors';
 
-const endpointPrefix = '/api/v' + config.get('version');
+const endpointPrefix = '/' + config.get('version');
 const server = supertest.agent(app);
 let token;
 
