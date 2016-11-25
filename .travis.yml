@@ -3,7 +3,7 @@ node_js:
   - "6"
 services:
   - postgresql
-before_script:
-  - psql -c 'create database sensorweb;' -U postgres
+addons:
+  postgresql: "9.4"
 after_success:
   - npm run coverage

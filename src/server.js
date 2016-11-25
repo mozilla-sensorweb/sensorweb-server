@@ -9,7 +9,6 @@ import auth             from './middlewares/auth'
 
 import config           from './config';
 
-import base             from './routes/base';
 import clients          from './routes/clients';
 import users            from './routes/users';
 
@@ -27,15 +26,12 @@ if (config.get('env') !== 'test') {
 
 app.use(cors());
 
-const endpointPrefix = '/api/v' + config.get('version');
+app.use('/', sensorthings);
 
-app.use(endpointPrefix + '/', sensorthings);
+const endpointPrefix = '/' + config.get('version');
 
 app.use(endpointPrefix + '/clients', auth(['admin']), clients);
 app.use(endpointPrefix + '/users', users);
-
-// SensorThings API endpoints.
-app.use(endpointPrefix + '/', base);
 
 const port = config.get('port');
 app.listen(port, () => console.log(`Running on localhost:${port}`));

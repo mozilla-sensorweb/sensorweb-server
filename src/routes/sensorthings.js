@@ -9,12 +9,13 @@
 import proxy                   from 'express-http-proxy';
 
 import config                  from '../config';
-import { resourceEndpoints }   from '../routes/base';
+import { resourceEndpoints }   from '../constants';
 import sensorthings            from 'sensorthings'
 
 let sensorthingsAPI;
 
-if (config.has('sensorthings')) {
+if (config.get('sensorthings.server') !==
+    config.default('sensorthings.server')) {
   /**
    * At the moment, we are using Sensorup as our remote implementation
    * of the Sensorthings API, but we should be able to proxy to any
@@ -51,7 +52,10 @@ if (config.has('sensorthings')) {
   });
 } else {
   //Init DB
-  sensorthingsAPI = sensorthings;
+  sensorthingsAPI = sensorthings({
+    db: config.get('db'),
+    api_version: config.get('version')
+  });
 }
 
 export default sensorthingsAPI

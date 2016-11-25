@@ -10,13 +10,5 @@
     "user": "postgres",
     "password": "default"
   },
-  "sensorthings": {
-    "server": "https://pg-api.sensorup.com",
-    "path": "/st-playground/proxy/v1.0",
-    "credentials": {
-      "header": "St-P-Access-Token",
-      "value": "a8654152-74c0-41dd-a954-bcab50ff99d4"
-    }
-  },
-  "version": "1.0"
+  "version": "v1.0"
 }
