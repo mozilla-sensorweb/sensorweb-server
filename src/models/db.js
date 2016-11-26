@@ -42,9 +42,9 @@ module.exports = () => {
   state = INITIALIZING;
 
   const dbConfig = config.get('db');
-  const { name, user, pass, host, port } = dbConfig;
+  const { name, user, password, host, port } = dbConfig;
 
-  const sequelize = new Sequelize(name, user, pass, {
+  const sequelize = new Sequelize(name, user, password, {
     host,
     port,
     dialect: 'postgres',
