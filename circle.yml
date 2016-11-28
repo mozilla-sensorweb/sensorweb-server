@@ -38,6 +38,10 @@ dependencies:
     # Clean up any old images and save the new one
     - I="image-$(date +%j).tar"; mkdir -p ~/docker; rm ~/docker/*; docker save app:build > ~/docker/$I; ls -l ~/docker
 
+database:
+  post:
+    - psql -c "CREATE EXTENSION postgis;" -d circle_test
+
 test:
   override:
     #- docker run app:build run coverage

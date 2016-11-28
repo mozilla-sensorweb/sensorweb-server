@@ -27,11 +27,12 @@ if (config.get('env') !== 'test') {
 
 app.use(cors());
 
+app.use('/', dockerflow);
+
 app.use('/', sensorthings);
 
 const endpointPrefix = '/' + config.get('version');
 
-app.use(endpointPrefix + '/', dockerflow);
 app.use(endpointPrefix + '/clients', auth(['admin']), clients);
 app.use(endpointPrefix + '/users', users);
 
