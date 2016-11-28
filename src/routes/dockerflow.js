@@ -35,7 +35,7 @@ const heartbeat = (req, res) => {
 router.get('/__heartbeat__', heartbeat);
 
 // For load balancers to make sure the app is running.
-router.get('/__lheartbeat__', heartbeat);
+router.get('/__lbheartbeat__', heartbeat);
 
 router.get('/__version__', (req, res) => {
   fs.stat(versionFile, err => {
