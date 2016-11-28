@@ -9,7 +9,7 @@ const server = supertest.agent(app);
 describe('Health checks', () => {
   ['/',
    '/__heartbeat__',
-   '/__lheartbeat__'].forEach(endpoint => {
+   '/__lbheartbeat__'].forEach(endpoint => {
     it('should response 200 OK to GET ' + endpoint + ' request', done => {
       server.get(endpoint)
       .expect(200)
