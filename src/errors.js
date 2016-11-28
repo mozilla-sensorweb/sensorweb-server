@@ -3,6 +3,7 @@ const errnos = {
   ERRNO_INVALID_API_CLIENT_NAME : 100,
   ERRNO_UNAUTHORIZED            : 401,
   ERRNO_FORBIDDEN               : 403,
+  ERRNO_RESOURCE_NOT_FOUND      : 404,
   ERRNO_INTERNAL_ERROR          : 500
 };
 exports.errnos = errnos;
@@ -11,6 +12,7 @@ exports.errnos = errnos;
 const errors = {
   BAD_REQUEST     : 'Bad Request',
   FORBIDDEN       : 'Forbidden',
+  NOT_FOUND       : 'Not Found',
   INTERNAL_ERROR  : 'Internal Server Error',
   UNAUTHORIZED    : 'Unauthorized'
 };
