@@ -17,8 +17,29 @@ const versionFile = __dirname + '/../../version.json';
 
 let router = express.Router();
 
+const getIsoDate = () => {
+  const date = new Date();
+  const pad = n => {
+    return n < 10 ? '0' + n : n;
+  }
+
+  return date.getUTCFullYear() + '-' +
+    pad(date.getUTCMonth() + 1) + '-' +
+    pad(date.getUTCDate()) + 'T' +
+    pad(date.getUTCHours()) + ':' +
+    pad(date.getUTCMinutes()) + ':' +
+    pad(date.getUTCSeconds()) + 'Z';
+};
+
 router.get('/', (req, res) => {
-  res.status(200).send('Hello');
+  const time = parseInt(Date.now() / 1000, 10);
+  const isoDate = getIsoDate();
+  res.status(200).json({
+    // Unix timestamp in seconds.
+    time,
+    // ISO date.
+    isoDate
+  });
 });
 
 const heartbeat = (req, res) => {
