@@ -2,6 +2,7 @@
 [![License](https://img.shields.io/badge/license-MPL2-blue.svg)](https://raw.githubusercontent.com/fxbox/foxbox/master/LICENSE)
 [![Build Status](https://travis-ci.org/mozilla-sensorweb/sensorweb-server.svg?branch=master)](https://travis-ci.org/mozilla-sensorweb/sensorweb-server)
 [![Coverage Status](https://coveralls.io/repos/github/mozilla-sensorweb/sensorweb-server/badge.svg)](https://coveralls.io/github/mozilla-sensorweb/sensorweb-server)
+[![CircleCI](https://circleci.com/gh/mozilla-sensorweb/sensorweb-server.svg?style=svg)](https://circleci.com/gh/mozilla-sensorweb/sensorweb-server)
 
 # Usage
 Before running the server, you will need to install all its dependencies via
