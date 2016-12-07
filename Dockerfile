@@ -17,8 +17,7 @@ RUN apt-get update && \
     rm -rf ~app/.node-gyp && \
     rm -rf ~app/.npm && \
     rm -r /tmp/* && \
-    rm -r /var/lib/apt/lists/* && \
-    rm -r /var/lib/dpkg/*
+    rm -r /var/lib/apt/lists/*
 
 COPY . /app
 
