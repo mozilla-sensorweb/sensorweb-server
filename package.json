@@ -47,7 +47,7 @@
     "on-headers": "^1.0.1",
     "owasp-password-strength-test": "^1.3.0",
     "pg": "^6.1.0",
-    "sensorthings": "^0.0.8",
+    "sensorthings": "^0.0.10",
     "sequelize": "^3.24.5"
   }
 }
