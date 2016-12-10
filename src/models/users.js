@@ -11,20 +11,29 @@ import {
 const authMethods = {
   BASIC: 'basic'
 };
-Object.keys(authMethods).forEach(key => exports[key] = key);
 
-exports.authenticate = (method, data) => {
-  if (!authMethods[method]) {
-    return Promise.reject(new Error(UNSUPPORTED_AUTH_METHOD));
-  }
+module.exports = (sequelize, DataTypes) => {
+  const User = sequelize.define('Users', {
+    identifier: { type: DataTypes.STRING(256), primaryKey: true }
+  });
 
-  // For now we only support admin authentication.
-  if (btoa('admin:' + config.get('adminPass')) !== data) {
-    return Promise.reject(new Error(UNAUTHORIZED));
-  }
+  User.authenticate = (method, data) => {
+    if (!authMethods[method]) {
+      return Promise.reject(new Error(UNSUPPORTED_AUTH_METHOD));
+    }
 
-  return Promise.resolve(jwt.sign({
-    id: 'admin',
-    scope: 'admin'
-  }, config.get('adminSessionSecret')));
-}
+    // For now we only support admin authentication.
+    if (btoa('admin:' + config.get('adminPass')) !== data) {
+      return Promise.reject(new Error(UNAUTHORIZED));
+    }
+
+    return Promise.resolve(jwt.sign({
+      id: 'admin',
+      scope: 'admin'
+    }, config.get('adminSessionSecret')));
+  };
+
+  Object.keys(authMethods).forEach(key => { User[key] = key; });
+
+  return User;
+};

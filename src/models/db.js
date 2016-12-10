@@ -56,9 +56,8 @@ module.exports = () => {
   fs.readdirSync(__dirname)
     .filter(file => {
       return ((file.indexOf('.js') !== 0) &&
-              (file !== 'db.js') &&
-              (file !== 'users.js') &&
-              (file.indexOf('.swp') < 0));
+              !file.startsWith('.') &&
+              (file !== 'db.js'));
     })
     .forEach(file => {
       const model = sequelize.import(path.join(__dirname, file));
