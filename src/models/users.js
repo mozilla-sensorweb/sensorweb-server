@@ -1,5 +1,4 @@
 import btoa     from 'btoa';
-import jwt      from 'jsonwebtoken';
 
 import config   from '../config';
 import {
@@ -9,7 +8,24 @@ import {
 
 // Supported authentication methods.
 const authMethods = {
-  BASIC: 'basic'
+  BASIC: ({ username, password }) => {
+    // For now we only support admin authentication.
+    if (username !== 'admin' || password !== config.get('adminPass')) {
+      return Promise.reject(new Error(UNAUTHORIZED));
+    }
+
+    return Promise.resolve({
+      id: 'admin',
+      scope: 'admin'
+    });
+  },
+
+  AUTH_PROVIDER: (data) => {
+    return Promise.resolve({
+      id: data,
+      scope: 'user'
+    });
+  },
 };
 
 module.exports = (sequelize, DataTypes) => {
@@ -22,15 +38,7 @@ module.exports = (sequelize, DataTypes) => {
       return Promise.reject(new Error(UNSUPPORTED_AUTH_METHOD));
     }
 
-    // For now we only support admin authentication.
-    if (btoa('admin:' + config.get('adminPass')) !== data) {
-      return Promise.reject(new Error(UNAUTHORIZED));
-    }
-
-    return Promise.resolve(jwt.sign({
-      id: 'admin',
-      scope: 'admin'
-    }, config.get('adminSessionSecret')));
+    return authMethods[method](data);
   };
 
   Object.keys(authMethods).forEach(key => { User[key] = key; });
