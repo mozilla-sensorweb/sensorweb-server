@@ -49,9 +49,9 @@ export default (scopes) => {
       // XXX Get allowed scopes from sensor/user.
 
       // For now we only allow 'admin' scope.
-      const validScopes = ['admin'].filter(scopeIndex => {
-        return scopes.indexOf(scopeIndex) != -1;
-      });
+      const validScopes = ['admin'].filter(
+        scope => scopes.includes(scope) != -1
+      );
 
       if (!validScopes.length) {
         return unauthorized(res);

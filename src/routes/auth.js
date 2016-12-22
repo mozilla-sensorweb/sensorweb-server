@@ -1,16 +1,17 @@
 import express  from 'express';
 
-import config   from '../config';
 import db       from '../models/db';
+import facebook from './auth/facebook';
+
 import {
   ApiError,
   ERRNO_UNAUTHORIZED,
   UNAUTHORIZED
 } from '../errors';
 
-let router = express.Router();
+const router = express.Router();
 
-router.post('/auth', (req, res) => {
+router.post('/basic', (req, res) => {
   if (!req.headers || !req.headers.authorization) {
     ApiError(res, 401, ERRNO_UNAUTHORIZED, UNAUTHORIZED);
     return;
@@ -25,10 +26,12 @@ router.post('/auth', (req, res) => {
 
     authenticate(BASIC, pass).then(token => {
       res.status(201).json({ token });
-    }).catch(error => {
+    }).catch(_error => {
       ApiError(res, 401, ERRNO_UNAUTHORIZED, UNAUTHORIZED);
     });
   });
 });
+
+router.use('/facebook', facebook);
 
 export default router;
