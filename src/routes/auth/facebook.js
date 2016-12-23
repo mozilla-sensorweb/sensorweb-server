@@ -2,10 +2,9 @@ import express  from 'express';
 import passport from 'passport';
 import { Strategy } from 'passport-facebook';
 
-import jwt      from 'jsonwebtoken';
-
 import config   from '../../config';
 import db       from '../../models/db';
+import { finalizeAuth } from './utils';
 
 const router = express.Router();
 
@@ -35,11 +34,8 @@ passport.use(new Strategy(
 router.get('/', passport.authenticate('facebook', { session: false }));
 router.get(
   '/callback',
-  passport.authenticate('facebook', { failureRedirect: '/login', session: false }),
-  function(req, res) {
-    const token = jwt.sign(req.user, config.get('adminSessionSecret'));
-    res.status(201).json({ token });
-  }
+  passport.authenticate('facebook', { failureRedirect: '/', session: false }),
+  finalizeAuth
 );
 
 export default router;
