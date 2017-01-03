@@ -1,9 +1,9 @@
 import express  from 'express';
 
-import basic    from './auth/basic';
-import facebook from './auth/facebook';
+import basic    from './basic';
+import facebook from './facebook';
 
-import config   from '../config';
+import config   from '../../config';
 
 const router = express.Router();
 
