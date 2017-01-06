@@ -30,7 +30,8 @@ const authMethods = {
 
 module.exports = (sequelize, DataTypes) => {
   const User = sequelize.define('Users', {
-    identifier: { type: DataTypes.STRING(256), primaryKey: true }
+    opaqueId: { type: DataTypes.STRING(256), unique: 'auth_info' },
+    provider: { type: DataTypes.STRING(32), unique: 'auth_info' },
   });
 
   User.authenticate = (method, data) => {
@@ -38,7 +39,18 @@ module.exports = (sequelize, DataTypes) => {
       return Promise.reject(new Error(UNSUPPORTED_AUTH_METHOD));
     }
 
-    return authMethods[method](data);
+    return authMethods[method](data)
+      .then(userData => {
+        if (userData.scope !== 'user') {
+          return userData;
+        }
+
+        return User.findOrCreate({
+          attributes: [],
+          where: userData.id,
+        })
+          .then(() => userData);
+      });
   };
 
   Object.keys(authMethods).forEach(key => { User[key] = key; });
