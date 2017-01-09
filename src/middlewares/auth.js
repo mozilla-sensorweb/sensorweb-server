@@ -50,7 +50,7 @@ export default (scopes) => {
 
       // For now we only allow 'admin' scope.
       const validScopes = ['admin'].filter(
-        scope => scopes.includes(scope) != -1
+        scope => scopes.includes(scope)
       );
 
       if (!validScopes.length) {
