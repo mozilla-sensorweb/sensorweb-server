@@ -26,6 +26,15 @@ convict.addFormat({
   coerce: (val) => (val === null ? null : parseInt(val))
 });
 
+convict.addFormat({
+  name: 'hex',
+  validate: function(val) {
+    if (/[^a-fA-F0-9]/.test(val)) {
+      throw new Error('must be a hex key');
+    }
+  }
+});
+
 const conf = convict({
   adminPass: {
     doc: 'The password for the admin user. Follow OWASP guidelines for passwords',
@@ -74,10 +83,12 @@ const conf = convict({
   },
   facebook: {
     clientId: {
-      doc: 'Facebook clientId'
+      doc: 'Facebook clientId',
+      format: 'nat'
     },
     clientSecret: {
-      doc: 'Facebook clientSecret'
+      doc: 'Facebook clientSecret',
+      format: 'hex'
     },
   },
   publicHost: {
