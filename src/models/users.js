@@ -57,7 +57,11 @@ module.exports = (sequelize, DataTypes) => {
   };
 
   User.associate = (db) => {
-    db.Users.belongsTo(db.Clients);
+    db.Users.belongsTo(
+      db.Clients,
+      { foreignKey: { allowNull: false }, onDelete: 'CASCADE' }
+    );
+    db.Clients.hasMany(db.Users);
   };
 
   Object.keys(authMethods).forEach(key => { User[key] = key; });
