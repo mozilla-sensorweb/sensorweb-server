@@ -22,7 +22,10 @@ passport.use(new Strategy(
     db()
       .then(models => {
         const { AUTH_PROVIDER, authenticate } = models.Users;
-        return authenticate(AUTH_PROVIDER, profile.id);
+        return authenticate(
+          AUTH_PROVIDER,
+          { opaqueId: profile.id, provider: 'facebook' }
+        );
       })
       .then(
         userInfo => cb(null, userInfo),
