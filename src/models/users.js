@@ -1,5 +1,3 @@
-import btoa     from 'btoa';
-
 import config   from '../config';
 import {
   UNAUTHORIZED,
@@ -30,8 +28,13 @@ const authMethods = {
 
 module.exports = (sequelize, DataTypes) => {
   const User = sequelize.define('Users', {
-    opaqueId: { type: DataTypes.STRING(256), unique: 'auth_info' },
-    provider: { type: DataTypes.STRING(32), unique: 'auth_info' },
+    opaqueId: { type: DataTypes.STRING(256) },
+    provider: { type: DataTypes.STRING(32) },
+  }, {
+    indexes: [{
+      unique: true,
+      fields: ['opaqueId', 'provider', 'ClientKey']
+    }]
   });
 
   User.authenticate = (method, data) => {
@@ -51,6 +54,10 @@ module.exports = (sequelize, DataTypes) => {
         })
           .then(() => userData);
       });
+  };
+
+  User.associate = (db) => {
+    db.Users.belongsTo(db.Clients);
   };
 
   Object.keys(authMethods).forEach(key => { User[key] = key; });
