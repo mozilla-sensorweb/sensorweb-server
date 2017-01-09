@@ -4,11 +4,6 @@
 
 /*
  * HTTP API for API clients management.
- *
- * Since we are currently only targeting a very limited number of API clients
- * (likely one for now) and we are not going to have a public registration form
- * for 3rd party devs for now, we keep it as simple as possible, storing only
- * the name of the API client, the API key and API secret.
  */
 
 import express from 'express';
@@ -18,9 +13,11 @@ import {
   ApiError,
   BAD_REQUEST,
   FORBIDDEN,
+  ERRNO_BAD_REQUEST,
   ERRNO_FORBIDDEN,
   ERRNO_INTERNAL_ERROR,
   ERRNO_INVALID_API_CLIENT_NAME,
+  ERRNO_INVALID_API_CLIENT_REDIRECT_URL,
   INTERNAL_ERROR,
   modelErrors,
   RECORD_ALREADY_EXISTS
@@ -31,13 +28,43 @@ let router = express.Router();
 // Create a new API client.
 router.post('/', (req, res) => {
   // Required params: name
-  // XXX We will probably require redirect url for signin/signup flow.
   req.checkBody('name', 'missing or invalid required "name" parameter')
      .notEmpty();
 
-  const errors = req.validationErrors();
-  if (errors) {
-    return ApiError(res, 400, ERRNO_INVALID_API_CLIENT_NAME, BAD_REQUEST);
+  if (req.body.authRedirectUrls) {
+    req.checkBody('authRedirectUrls', 'invalid "authRedirectUrls"')
+       .isArrayOfUrls({ require_valid_protocol: true });
+  }
+
+  if (req.body.authFailureRedirectUrls) {
+    // It makes no sense to handle only the error case of an user
+    // authentication flow, so we explicitly forbid setting
+    // authFailureRedirectUrls if authRedirectUrls is not present.
+    if (!req.body.authRedirectUrls) {
+      return ApiError(res, 400, ERRNO_INVALID_API_CLIENT_REDIRECT_URL,
+                      BAD_REQUEST);
+    }
+
+    req.checkBody('authFailureRedirectUrls',
+                  'invalid "authFailureRedirectUrls"')
+       .isArrayOfUrls({ require_valid_protocol: true });
+  }
+
+  const error = req.validationErrors()[0];
+  if (error) {
+    let errno;
+    switch (error.param) {
+      case 'authRedirectUrls':
+      case 'authFailureRedirectUrls':
+        errno = ERRNO_INVALID_API_CLIENT_REDIRECT_URL;
+        break;
+      case 'name':
+        errno = ERRNO_INVALID_API_CLIENT_NAME;
+        break;
+      default:
+        errno = ERRNO_BAD_REQUEST;
+    }
+    return ApiError(res, 400, errno, BAD_REQUEST);
   }
 
   db().then(models => {
@@ -56,7 +83,8 @@ router.post('/', (req, res) => {
 router.get('/', (req, res) => {
   db().then(models => {
     models.Clients.findAll({
-      attributes: ['key', 'name']
+      attributes: ['key', 'name', 'authRedirectUrls',
+                   'authFailureRedirectUrls']
     }).then(clients => {
       res.status(200).send(clients);
     }).catch(error => {

@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "debug": "nodemon -q --watch src --exec babel-node -- --inspect src/server.js",
     "coverage": "./node_modules/.bin/nyc report --reporter=text-lcov | ./node_modules/coveralls/bin/coveralls.js",
     "prestart": "./scripts/prestart.sh",
     "posttest": "./scripts/posttest.sh",

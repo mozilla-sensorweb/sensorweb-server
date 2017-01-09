@@ -1,10 +1,12 @@
 // errno
 const errnos = {
-  ERRNO_INVALID_API_CLIENT_NAME : 100,
-  ERRNO_UNAUTHORIZED            : 401,
-  ERRNO_FORBIDDEN               : 403,
-  ERRNO_RESOURCE_NOT_FOUND      : 404,
-  ERRNO_INTERNAL_ERROR          : 500
+  ERRNO_INVALID_API_CLIENT_NAME         : 100,
+  ERRNO_INVALID_API_CLIENT_REDIRECT_URL : 101,
+  ERRNO_BAD_REQUEST                     : 400,
+  ERRNO_UNAUTHORIZED                    : 401,
+  ERRNO_FORBIDDEN                       : 403,
+  ERRNO_RESOURCE_NOT_FOUND              : 404,
+  ERRNO_INTERNAL_ERROR                  : 500
 };
 exports.errnos = errnos;
 

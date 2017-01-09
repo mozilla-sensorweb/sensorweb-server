@@ -22,6 +22,13 @@ module.exports = (sequelize, DataTypes) => {
       defaultValue: () => {
         return randomBytes(64).toString('hex');
       }
+    },
+    // Redirection URLs for user authentication flows.
+    authRedirectUrls: {
+      type: DataTypes.ARRAY(DataTypes.STRING(2048))
+    },
+    authFailureRedirectUrls: {
+      type: DataTypes.ARRAY(DataTypes.STRING(2048))
     }
   });
   return Client;

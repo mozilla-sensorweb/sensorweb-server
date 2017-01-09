@@ -61,6 +61,7 @@ The currently-defined error responses are:
 
 * status code 400, errno 400: Bad request.
 * status code 400, errno 100: Invalid client API name. Missing or malformed client API name.
+* status code 400, errno 100: Invalid client API redirection URL. Malformed client API redirection URL.
 * status code 401, errno 401: Unauthorized. If credentials are not valid.
 * status code 403, errno 403: Forbidden. The server understood the request, but is refusing to fulfill it. Authorization will not help and the request SHOULD NOT be repeated.
 * status code 500, errno 500: Internal server error.
@@ -110,6 +111,8 @@ Creates a new API client.
 ### Request
 ___Parameters___
 * name - API client name.
+* authRedirectUrls (optional) - API client user authentication redirection URLs.
+* authFailureRedirectUrls (optional) - API client user authentication failure redirection URLs.
 
 ```ssh
 POST /api/clients HTTP/1.1
@@ -117,7 +120,9 @@ Content-Type: application/json
 Cache-Control: no-cache
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImFkbWluIiwic2NvcGUiOiJhZG1pbiIsImlhdCI6MTQ3NDY0Nzc1OX0.R1vQOLVg8A-6i5QaZQVOGAzImiPvgAdkWiODYhYiNn4
 {
-	"name": "SensorWebClient"
+    "name": "SensorWebClient",
+    "authRedirectUrls": ["https://domain.org/auth/success"],
+    "authFailureRedirectUrls": ["https://domain.org/auth/error"]
 }
 ```
 
