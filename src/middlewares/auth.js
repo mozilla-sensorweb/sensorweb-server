@@ -16,6 +16,15 @@ function unauthorized(res) {
 }
 
 export default (scopes) => {
+  // For now we only allow 'admin' scope.
+  const validScopes = ['admin', 'client', 'user'].filter(
+    scope => scopes.includes(scope)
+  );
+
+  if (!validScopes.length) {
+    throw new Error(`No valid scope found in "${scopes}"`);
+  }
+
   return (req, res, next) => {
     const authHeader = req.headers['authorization'];
     if (!authHeader) {
@@ -34,32 +43,28 @@ export default (scopes) => {
     // For now we only allow authenticated requests from the admin user.
     // When this changes we will have a different secret per sensor and per
     // user.
-    if (!decoded || !decoded.id || decoded.id !== 'admin') {
+    if (!decoded || !decoded.id || !decoded.scope) {
       return unauthorized(res);
-    };
+    }
+
+    if (!validScopes.includes(decoded.scope)) {
+      // TODO log
+      return unauthorized(res);
+    }
 
     const secret = config.get('adminSessionSecret');
 
     // Verify JWT signature.
-    jwt.verify(token, secret, (error, decoded) => {
+    jwt.verify(token, secret, (error) => {
       if (error) {
+        // TODO log
         return unauthorized(res);
       }
 
       // XXX Get allowed scopes from sensor/user.
-
-      // For now we only allow 'admin' scope.
-      const validScopes = ['admin'].filter(
-        scope => scopes.includes(scope)
-      );
-
-      if (!validScopes.length) {
-        return unauthorized(res);
-      }
-
       // If everything is good, save the decoded payload for use in other
       // routes.
-      req.decoded = decoded;
+      req.user = decoded;
       next();
     });
   };

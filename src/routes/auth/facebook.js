@@ -5,6 +5,7 @@ import { Strategy } from 'passport-facebook';
 import config   from '../../config';
 import db       from '../../models/db';
 import { finalizeAuth } from './utils';
+import { ApiError, BAD_REQUEST, ERRNO_BAD_REQUEST } from '../errors';
 
 const router = express.Router();
 
@@ -34,10 +35,27 @@ passport.use(new Strategy(
   }
 ));
 
-router.get('/', passport.authenticate('facebook', { session: false }));
+router.get('/', (req, res, next) => {
+  const client = req.user.client;
+  const { redirectUrl, failureUrl } = req.query;
+
+  if (!client.authRedirectUrls.includes(redirectUrl) ||
+      !client.failureRedirectUrls.includes(failureUrl)) {
+    return ApiError(
+      res, 400, ERRNO_BAD_REQUEST, BAD_REQUEST,
+      'Your redirect and failure URLs must be declared in your account'
+    );
+  }
+
+  return passport.authenticate(
+    'facebook',
+    { session: false, state: {}, }
+  )(req, res, next);
+});
+
 router.get(
   '/callback',
-  passport.authenticate('facebook', { failureRedirect: '/', session: false }),
+  passport.authenticate('facebook', { failureRedirect: '../', session: false }),
   finalizeAuth
 );
 
