@@ -18,7 +18,16 @@ import sensorthings     from './routes/sensorthings';
 let app = express();
 
 app.use(bodyParser.urlencoded({ extended: false }));
-app.use(expressValidator());
+app.use(expressValidator({
+  customValidators: {
+    isArrayOfUrls: (value, options) => {
+      const validator = expressValidator.validator;
+      return Array.isArray(value) &&
+             value.length > 0 &&
+             value.every(item => validator.isUrl(item, options));
+    }
+  }
+}));
 app.use(bodyParser.json());
 
 if (config.get('env') !== 'test') {
