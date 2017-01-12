@@ -1,32 +1,36 @@
 import express  from 'express';
+import cookieParser from 'cookie-parser';
+import session  from 'express-session';
+import SequelizeStoreFactory from 'connect-session-sequelize';
 
 import basic    from './basic';
 import facebook from './facebook';
 
 import config   from '../../config';
-import db       from '../../models/db';
-import auth     from '../../middlewares/auth';
-import { ApiError, FORBIDDEN, ERRNO_FORBIDDEN } from '../errors';
+import { sequelize }       from '../../models/db';
 
 const router = express.Router();
 
 router.use('/basic', basic);
 
-// for all other login mechanisms, we need a "client" JWT.
-router.use(auth(['client']));
-router.use((req, res, next) => {
-  // check existing client
-  db()
-    .then(({ Clients }) => Clients.findById(req.user.id))
-    .then(client => {
-      if (client) {
-        req.user.client = client;
-        return next();
-      }
-
-      return ApiError(res, 403, ERRNO_FORBIDDEN, FORBIDDEN);
-    });
-});
+// initalize sequelize with session store
+const SequelizeStore = SequelizeStoreFactory(session.Store);
+const isProduction = process.env.NODE_ENV === 'production';
+router.use(cookieParser());
+router.use(session({
+  secret: 'keyboard cat',
+  store: new SequelizeStore({
+    db: sequelize
+  }),
+  cookie: {
+    path: `/${config.get('version')}/auth`,
+    secure: isProduction,
+  },
+  name: 'connect.sid.auth',
+  proxy: isProduction, // TODO maybe better configure this in config
+  resave: false,
+  saveUninitialized: false,
+}));
 
 if (config.get('facebook.clientID')) {
   router.use('/facebook', facebook);

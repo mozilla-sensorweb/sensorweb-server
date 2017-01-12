@@ -1,18 +1,18 @@
 import jwt      from 'jsonwebtoken';
+import url      from 'url';
 
 import config   from '../../config';
-import db       from '../../models/db';
 
 export function finalizeAuth(req, res) {
   const token = jwt.sign(req.user, config.get('adminSessionSecret'));
 
-  db().then(models => {
-    const Clients = models.Clients;
+  if (req.session && req.session.redirectUrl) {
+    const redirectUrl = url.parse(req.session.redirectUrl, true);
+    redirectUrl.query.token = token;
+    req.session.destroy();
+    res.redirect(url.format(redirectUrl));
+    return;
+  }
 
-    res.redirect(`${Clients.authCallbackUrl[0]}?token=${token}`);
-
-    if (req.session) {
-      req.session.destroy();
-    }
-  });
+  res.json({ token });
 }

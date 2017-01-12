@@ -39,6 +39,7 @@
     "btoa": "^1.1.2",
     "connect-session-sequelize": "^4.1.0",
     "convict": "^1.5.0",
+    "cookie-parser": "^1.4.3",
     "cors": "^2.8.1",
     "express": "^4.14.0",
     "express-http-proxy": "^0.10.0",

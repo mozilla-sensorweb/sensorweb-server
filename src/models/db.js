@@ -9,7 +9,7 @@ import fs        from 'fs';
 import path      from 'path';
 import Sequelize from 'sequelize';
 
-const IDLE           = 0
+const IDLE           = 0;
 const INITIALIZING   = 1;
 const READY          = 2;
 
@@ -27,7 +27,16 @@ let deferreds = [];
 let state = IDLE;
 let db    = null;
 
-module.exports = () => {
+const { name, user, password, host, port } = config.get('db');
+
+const sequelize = new Sequelize(name, user, password, {
+  host,
+  port,
+  dialect: 'postgres',
+  logging: false
+});
+
+export default function() {
   if (state === READY) {
     return Promise.resolve(db);
   }
@@ -40,16 +49,6 @@ module.exports = () => {
   }
 
   state = INITIALIZING;
-
-  const dbConfig = config.get('db');
-  const { name, user, password, host, port } = dbConfig;
-
-  const sequelize = new Sequelize(name, user, password, {
-    host,
-    port,
-    dialect: 'postgres',
-    logging: false
-  });
 
   db = {};
 
@@ -73,7 +72,7 @@ module.exports = () => {
   db.sequelize = sequelize;
   db.Sequelize = Sequelize;
 
-  return db.sequelize.sync().then(() => {
+  return sequelize.sync().then(() => {
     while (deferreds.length) {
       deferreds.pop().resolve(db);
     }
@@ -85,4 +84,6 @@ module.exports = () => {
       deferreds.pop().reject(e);
     }
   });
-};
+}
+
+export { sequelize, Sequelize };
