@@ -106,22 +106,40 @@ describe('Clients API', () => {
       });
     });
 
-    it('should respond 201 Created if request is valid', done => {
-      const name = 'clientName';
-      server.post(endpointPrefix + '/clients')
-            .set('Authorization', 'Bearer ' + token)
-            .send({ name: 'clientName',
-                    authRedirectUrls: ['http://something.com'],
-                    authFailureRedirectUrls: ['http://something.com'] })
-            .expect('Content-type', /json/)
-            .expect(201)
-            .end((err, res) => {
-              res.status.should.be.equal(201);
-              res.body.name.should.be.equal(name);
-              res.body.key.should.be.instanceof(String).and.have.lengthOf(16);
-              res.body.secret.should.be.instanceof(String).and.have.lengthOf(128);
-              done();
-            });
+    [{
+      reason: 'should respond 201 Created if request contains empty ' +
+              'redirect URLs',
+      clientName: 'clientName',
+      body: {
+        authRedirectUrls: [],
+        authFailureRedirectUrls: []
+      }
+    }, {
+      reason: 'should respond 201 Created if request has valid name ' +
+              'and redirect URLs',
+      clientName: 'anotherClientName',
+      body: {
+        authRedirectUrls: ['http://something.com'],
+        authFailureRedirectUrls: ['http://something.com']
+      }
+    }].forEach(test => {
+      it(test.reason, done => {
+        test.body.name = test.clientName;
+        server.post(endpointPrefix + '/clients')
+              .set('Authorization', 'Bearer ' + token)
+              .send(test.body)
+              .expect('Content-type', /json/)
+              .expect(201)
+              .end((err, res) => {
+                res.status.should.be.equal(201);
+                res.body.name.should.be.equal(test.clientName);
+                res.body.key.should.be.instanceof(String)
+                   .and.have.lengthOf(16);
+                res.body.secret.should.be.instanceof(String)
+                   .and.have.lengthOf(128);
+                done();
+              });
+      });
     });
 
     it('should respond 403 Forbidden if API client is already registered',
@@ -143,6 +161,12 @@ describe('Clients API', () => {
   });
 
   describe('GET ' + endpointPrefix + '/clients', () => {
+    beforeEach(() => {
+      return db().then(models => {
+        models.Clients.destroy({ where: {} });
+      });
+    });
+
     it('should respond 401 Unauthorized if there is no auth header', done => {
       server.get(endpointPrefix + '/clients')
             .expect('Content-type', /json/)
@@ -156,44 +180,48 @@ describe('Clients API', () => {
             });
     });
 
-    it('should respond 200 OK with an array containing the registered client',
-       done => {
+    it('should respond 200 OK with an empty array', done => {
       server.get(endpointPrefix + '/clients')
             .set('Authorization', 'Bearer ' + token)
             .expect('Content-type', /json/)
             .expect(200)
             .end((err, res) => {
               res.status.should.be.equal(200);
-              res.body.should.be.instanceof(Array).and.have.lengthOf(1);
-              res.body.forEach(client => {
-                client.should.have.properties('name');
-                client.should.have.properties('key');
-                client['authRedirectUrls'].should.be.instanceof(Array)
-                      .and.have.lengthOf(1);
-                client['authFailureRedirectUrls'].should.be.instanceof(Array)
-                      .and.have.lengthOf(1);
-                client.should.not.have.properties('secret');
-              });
+              res.body.should.be.instanceof(Array).and.have.lengthOf(0);
               done();
             });
     });
 
-    it('should respond 200 OK with an empty array',
+    it('should respond 200 OK with an array containing the registered client',
        done => {
-      db().then(models => {
-        models.Clients.destroy({
-          where: {}
-        }).then(() => {
-          server.get(endpointPrefix + '/clients')
-                .set('Authorization', 'Bearer ' + token)
-                .expect('Content-type', /json/)
-                .expect(200)
-                .end((err, res) => {
-                  res.status.should.be.equal(200);
-                  res.body.should.be.instanceof(Array).and.have.lengthOf(0);
-                  done();
+      new Promise(resolve => {
+        server.post(endpointPrefix + '/clients')
+              .set('Authorization', 'Bearer ' + token)
+              .send({ name: 'clientName',
+                      authRedirectUrls: ['http://something.com'],
+                      authFailureRedirectUrls: ['http://something.com'] })
+              .expect('Content-type', /json/)
+              .expect(201)
+              .end(resolve);
+      }).then(() => {
+        server.get(endpointPrefix + '/clients')
+              .set('Authorization', 'Bearer ' + token)
+              .expect('Content-type', /json/)
+              .expect(200)
+              .end((err, res) => {
+                res.status.should.be.equal(200);
+                res.body.should.be.instanceof(Array).and.have.lengthOf(1);
+                res.body.forEach(client => {
+                  client.should.have.properties('name');
+                  client.should.have.properties('key');
+                  client['authRedirectUrls'].should.be.instanceof(Array)
+                        .and.have.lengthOf(1);
+                  client['authFailureRedirectUrls'].should.be.instanceof(Array)
+                        .and.have.lengthOf(1);
+                  client.should.not.have.properties('secret');
                 });
-        });
+                done();
+              });
       });
     });
   });

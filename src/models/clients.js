@@ -25,10 +25,22 @@ module.exports = (sequelize, DataTypes) => {
     },
     // Redirection URLs for user authentication flows.
     authRedirectUrls: {
-      type: DataTypes.ARRAY(DataTypes.STRING(2048))
+      type: DataTypes.ARRAY(DataTypes.STRING(2048)),
+      set: function(value) {
+        if (value && Array.isArray(value) && !value.length) {
+          value = null;
+        }
+        this.setDataValue('authRedirectUrls', value);
+      }
     },
     authFailureRedirectUrls: {
-      type: DataTypes.ARRAY(DataTypes.STRING(2048))
+      type: DataTypes.ARRAY(DataTypes.STRING(2048)),
+      set: function(value) {
+        if (value && Array.isArray(value) && !value.length) {
+          value = null;
+        }
+        this.setDataValue('authFailureRedirectUrls', value);
+      }
     }
   });
   return Client;
