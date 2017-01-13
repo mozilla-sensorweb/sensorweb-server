@@ -95,7 +95,27 @@ router.get('/',
 router.get(
   '/callback',
   checkHasValidSession,
-  passport.authenticate('facebook', { failureRedirect: '../', session: false }),
+  (req, res, next) => {
+    passport.authenticate(
+      'facebook',
+      (err, user, _info) => {
+        if (err) {
+          return next(err);
+        }
+
+        if (!user) {
+          if (req.session.failureUrl) {
+            return res.redirect(req.session.failureUrl);
+          }
+
+          return res.status(401).end('Unauthorized');
+        }
+
+        req.user = user;
+        return next();
+      }
+    )(req, res, next);
+  },
   finalizeAuth
 );
 
