@@ -27,13 +27,20 @@ export default (scopes) => {
 
   return (req, res, next) => {
     const authHeader = req.headers['authorization'];
-    if (!authHeader) {
+    const authQuery = req.query.authorizationToken;
+
+    if (!authHeader && !authQuery) {
       return unauthorized(res);
     }
 
-    const token = authHeader.split('Bearer ')[1];
-    if (!token) {
-      return unauthorized(res);
+    let token;
+    if (authHeader) {
+      const token = authHeader.split('Bearer ')[1];
+      if (!token) {
+        return unauthorized(res);
+      }
+    } else {
+      token = authQuery;
     }
 
     // Because we expect to get tokens signed with different secrets, we first

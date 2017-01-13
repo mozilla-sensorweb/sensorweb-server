@@ -22,16 +22,21 @@ passport.use(new Strategy(
     clientID: config.get('facebook.clientID'),
     clientSecret: config.get('facebook.clientSecret'),
     callbackURL,
+    passReqToCallback: true,
     enableProof: true,
     state: true,
   },
-  function(accessToken, refreshToken, profile, cb) {
+  function(req, accessToken, refreshToken, profile, cb) {
     db()
       .then(models => {
         const { AUTH_PROVIDER, authenticate } = models.Users;
         return authenticate(
           AUTH_PROVIDER,
-          { opaqueId: profile.id, provider: 'facebook' }
+          {
+            opaqueId: profile.id,
+            provider: 'facebook',
+            ClientKey: req.session.clientKey,
+          }
         );
       })
       .then(
@@ -79,10 +84,10 @@ router.get('/',
 
     req.session.redirectUrl = redirectUrl;
     req.session.failureUrl = failureUrl;
+    req.session.clientKey = client.key;
 
     return passport.authenticate(
-      'facebook',
-      { session: false, state: {}, }
+      'facebook', { session: false }
     )(req, res, next);
   }
 );

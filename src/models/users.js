@@ -50,7 +50,7 @@ module.exports = (sequelize, DataTypes) => {
 
         return User.findOrCreate({
           attributes: [],
-          where: userData.id,
+          where: userData.id, // this contains all user attributes
         })
           .then(() => userData);
       });
