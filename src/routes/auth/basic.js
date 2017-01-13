@@ -5,6 +5,7 @@ import { BasicStrategy } from 'passport-http';
 
 import db       from '../../models/db';
 import { finalizeAuth } from './utils';
+import { UNAUTHORIZED } from '../../errors';
 
 passport.use(new BasicStrategy(
   (username, password, done) => {
@@ -13,7 +14,13 @@ passport.use(new BasicStrategy(
       return authenticate(BASIC, { username, password });
     }).then(
       userInfo => done(null, userInfo),
-      err => done(err)
+      err => {
+        if (err.message === UNAUTHORIZED) {
+          done(null, false);
+          return;
+        }
+        done(err);
+      }
     );
   }
 ));
