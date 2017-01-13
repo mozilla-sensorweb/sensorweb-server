@@ -10,6 +10,7 @@ import {
   ApiError,
   BAD_REQUEST, ERRNO_BAD_REQUEST,
   FORBIDDEN, ERRNO_FORBIDDEN,
+  UNAUTHORIZED, ERRNO_UNAUTHORIZED,
 } from '../../errors';
 
 const router = express.Router();
@@ -108,7 +109,7 @@ router.get(
             return res.redirect(req.session.failureUrl);
           }
 
-          return res.status(401).end('Unauthorized');
+          return ApiError(res, 401, ERRNO_UNAUTHORIZED, UNAUTHORIZED);
         }
 
         req.user = user;

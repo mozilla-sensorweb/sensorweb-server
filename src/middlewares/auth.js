@@ -4,6 +4,7 @@
 
 import jwt    from 'jsonwebtoken';
 import config from '../config';
+import db     from '../models/db';
 
 import {
   ApiError,
@@ -26,7 +27,7 @@ export default (scopes) => {
   }
 
   return (req, res, next) => {
-    const authHeader = req.headers['authorization'];
+    const authHeader = req.headers.authorization;
     const authQuery = req.query.authorizationToken;
 
     if (!authHeader && !authQuery) {
@@ -47,9 +48,6 @@ export default (scopes) => {
     // need to get the owner of the token so we can get the appropriate secret.
     const decoded = jwt.decode(token);
 
-    // For now we only allow authenticated requests from the admin user.
-    // When this changes we will have a different secret per sensor and per
-    // user.
     if (!decoded || !decoded.id || !decoded.scope) {
       return unauthorized(res);
     }
@@ -59,20 +57,33 @@ export default (scopes) => {
       return unauthorized(res);
     }
 
-    const secret = config.get('adminSessionSecret');
+    let secretPromise;
+    switch(decoded.scope) {
+      case 'client':
+        secretPromise = db()
+          .then(({ Clients }) => Clients.findById(decoded.id))
+          .then(client => client.secret);
+        break;
+      case 'user':
+      case 'admin':
+        secretPromise = Promise.resolve(config.get('adminSessionSecret'));
+        break;
+      default:
+        // should not happen because we check this earlier
+        next(new Error(`Unknown scope ${decoded.scope}`));
+    }
 
     // Verify JWT signature.
-    jwt.verify(token, secret, (error) => {
-      if (error) {
-        // TODO log
-        return unauthorized(res);
-      }
+    secretPromise.then(secret => {
+      jwt.verify(token, secret, (error) => {
+        if (error) {
+          // TODO log
+          return unauthorized(res);
+        }
 
-      // XXX Get allowed scopes from sensor/user.
-      // If everything is good, save the decoded payload for use in other
-      // routes.
-      req.user = decoded;
-      next();
-    });
+        req.user = decoded;
+        return next();
+      });
+    }).catch(err => next(err || new Error('Unexpected error')));
   };
 };
