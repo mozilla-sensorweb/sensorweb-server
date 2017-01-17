@@ -20,6 +20,12 @@ const password = value => {
   }
 };
 
+convict.addFormat({
+  name: 'dbport',
+  validate: (val) => (val === null || val >= 0 && val <= 65535),
+  coerce: (val) => (val === null ? null : parseInt(val))
+});
+
 const conf = convict({
   adminPass: {
     doc: 'The password for the admin user. Follow OWASP guidelines for passwords',
@@ -46,22 +52,24 @@ const conf = convict({
   db: {
     host: {
       doc: 'Hostname where PostgreSQL is running',
-      format: 'url',
       default: 'localhost'
     },
     port: {
       doc: 'Port where PostgreSQL is running',
-      format: 'port',
+      format: 'dbport',
       default: 5432
     },
     name: {
-      doc: 'Database name'
+      doc: 'Database name',
+      default: 'sensorweb',
     },
     user: {
-      doc: 'Database username'
+      doc: 'Database username',
+      default: '',
     },
     password: {
-      doc: 'Database password'
+      doc: 'Database password',
+      default: '',
     }
   },
   sensorthings: {
