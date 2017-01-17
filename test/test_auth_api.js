@@ -15,7 +15,7 @@ import {
 const endpointPrefix = '/' + config.get('version');
 const server = supertest.agent(app);
 
-describe('Users API', () => {
+describe('Authentication API', () => {
   describe('POST ' + endpointPrefix + '/auth/basic', () => {
     it('should response 401 Unauthorized if there is no auth header', done => {
       server.post(endpointPrefix + '/auth/basic')
@@ -28,9 +28,7 @@ describe('Users API', () => {
               done();
             });
     });
-  });
 
-  describe('POST ' + endpointPrefix + '/auth/basic', () => {
     it('should response 401 Unauthorized if auth header is invalid', done => {
       server.post(endpointPrefix + '/auth/basic')
             .set('Authorization', 'Invalid')
@@ -43,9 +41,7 @@ describe('Users API', () => {
               done();
             });
     });
-  });
 
-  describe('POST ' + endpointPrefix + '/auth/basic', () => {
     it('should response 401 Unauthorized if admin pass is incorrect', done => {
       server.post(endpointPrefix + '/auth/basic')
             .set('Authorization', 'Basic invalidpassword')
@@ -58,9 +54,7 @@ describe('Users API', () => {
               done();
             });
     });
-  });
 
-  describe('POST ' + endpointPrefix + '/auth/basic', () => {
     it('should response 201 Created if admin pass is correct', done => {
       const pass = btoa('admin:' + config.get('adminPass'));
       server.post(endpointPrefix + '/auth/basic')
@@ -72,5 +66,11 @@ describe('Users API', () => {
               done();
             });
     });
+  });
+
+  describe.only(`POST ${endpointPrefix}/auth/facebook`, function() {
+    it('should redirect to the facebook endpoint', function*() {
+      
+    })
   });
 });

@@ -32,6 +32,7 @@ router.post('/',
     passport.authenticate(
       'basic',
       (err, user, _info) => {
+        // TODO we can probably remove this callback with issue #44
         if (err) {
           return next(err);
         }
