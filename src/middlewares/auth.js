@@ -36,7 +36,7 @@ export default (scopes) => {
 
     let token;
     if (authHeader) {
-      const token = authHeader.split('Bearer ')[1];
+      token = authHeader.split('Bearer ')[1];
       if (!token) {
         return unauthorized(res);
       }

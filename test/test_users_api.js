@@ -16,9 +16,9 @@ const endpointPrefix = '/' + config.get('version');
 const server = supertest.agent(app);
 
 describe('Users API', () => {
-  describe('POST ' + endpointPrefix + '/users/auth', () => {
+  describe('POST ' + endpointPrefix + '/auth/basic', () => {
     it('should response 401 Unauthorized if there is no auth header', done => {
-      server.post(endpointPrefix + '/users/auth')
+      server.post(endpointPrefix + '/auth/basic')
             .expect(401)
             .end((err, res) => {
               res.status.should.be.equal(401);
@@ -30,9 +30,9 @@ describe('Users API', () => {
     });
   });
 
-  describe('POST ' + endpointPrefix + '/users/auth', () => {
+  describe('POST ' + endpointPrefix + '/auth/basic', () => {
     it('should response 401 Unauthorized if auth header is invalid', done => {
-      server.post(endpointPrefix + '/users/auth')
+      server.post(endpointPrefix + '/auth/basic')
             .set('Authorization', 'Invalid')
             .expect(401)
             .end((err, res) => {
@@ -45,9 +45,9 @@ describe('Users API', () => {
     });
   });
 
-  describe('POST ' + endpointPrefix + '/users/auth', () => {
+  describe('POST ' + endpointPrefix + '/auth/basic', () => {
     it('should response 401 Unauthorized if admin pass is incorrect', done => {
-      server.post(endpointPrefix + '/users/auth')
+      server.post(endpointPrefix + '/auth/basic')
             .set('Authorization', 'Basic invalidpassword')
             .expect(401)
             .end((err, res) => {
@@ -60,12 +60,12 @@ describe('Users API', () => {
     });
   });
 
-  describe('POST ' + endpointPrefix + '/users/auth', () => {
+  describe('POST ' + endpointPrefix + '/auth/basic', () => {
     it('should response 201 Created if admin pass is correct', done => {
       const pass = btoa('admin:' + config.get('adminPass'));
-      server.post(endpointPrefix + '/users/auth')
+      server.post(endpointPrefix + '/auth/basic')
             .set('Authorization', 'Basic ' + pass)
-            .expect(201)
+            .expect(200)
             .end((err, res) => {
               res.status.should.be.equal(201);
               should.exist(res.body.token);

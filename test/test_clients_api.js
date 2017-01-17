@@ -24,7 +24,7 @@ let token;
 describe('Clients API', () => {
   before((done) => {
     const pass = btoa('admin:' + config.get('adminPass'));
-    server.post(endpointPrefix + '/users/auth')
+    server.post(endpointPrefix + '/auth/basic')
           .set('Authorization', 'Basic ' + pass)
           .end((err, res) => {
             should.exist(res.body.token);

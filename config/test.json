@@ -3,12 +3,17 @@
   "adminSessionSecret": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9",
   "env": "test",
   "port": 8080,
+  "publicHost": "http://localhost:8080",
   "db": {
     "host": "localhost",
     "port": 5432,
     "name": "sensorwebtest",
     "user": "postgres",
     "password": "default"
+  },
+  "facebook": {
+    "clientID": "some_client_id",
+    "clientSecret": "some_client_secret"
   },
   "version": "v1.0"
 }

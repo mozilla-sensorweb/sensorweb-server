@@ -14,5 +14,5 @@ export function finalizeAuth(req, res) {
     return;
   }
 
-  res.json({ token });
+  res.status(201).json({ token });
 }
