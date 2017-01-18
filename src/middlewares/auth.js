@@ -34,14 +34,9 @@ export default (scopes) => {
       return unauthorized(res);
     }
 
-    let token;
-    if (authHeader) {
-      token = authHeader.split('Bearer ')[1];
-      if (!token) {
-        return unauthorized(res);
-      }
-    } else {
-      token = authQuery;
+    const token = authHeader ? authHeader.split('Bearer ')[1] : authQuery;
+    if (!token) {
+      return unauthorized(res);
     }
 
     // Because we expect to get tokens signed with different secrets, we first
