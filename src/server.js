@@ -23,7 +23,7 @@ app.use(expressValidator({
     isArrayOfUrls: (value, options) => {
       const validator = expressValidator.validator;
       return Array.isArray(value) &&
-             value.every(item => validator.isUrl(item, options));
+             value.every(item => validator.isURL(item, options));
     }
   }
 }));
