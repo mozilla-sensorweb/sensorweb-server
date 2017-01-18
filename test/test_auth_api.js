@@ -198,14 +198,15 @@ describe('Authentication API', () => {
         .query(true)
         .reply(200, { id: 'facebook_id' });
 
-      const expectedToken = jwt.sign({
-        id: {
-          opaqueId: 'facebook_id',
-          provider: 'facebook',
-          ClientKey: client.key,
-        },
-        scope: 'user',
-      }, config.get('adminSessionSecret'));
+      const expectedId = {
+        opaqueId: 'facebook_id',
+        provider: 'facebook',
+        ClientKey: client.key,
+      };
+      const expectedToken = jwt.sign(
+        { id: expectedId, scope: 'user' },
+        config.get('adminSessionSecret')
+      );
 
       yield agent.get(`${endpoint}/callback`)
                  .query({ code: 'facebook_return_code' })
@@ -218,6 +219,10 @@ describe('Authentication API', () => {
       facebook.done();
       nock.cleanAll();
       nock.restore();
+
+      const { Users } = yield db();
+      const user = yield Users.findOne({ where: expectedId });
+      should.exist(user);
     });
   });
 });
