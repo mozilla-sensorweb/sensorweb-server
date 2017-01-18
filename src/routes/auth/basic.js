@@ -16,6 +16,7 @@ passport.use(new BasicStrategy(
       userInfo => done(null, userInfo),
       err => {
         if (err.message === UNAUTHORIZED) {
+          // passing back `false` to passport means "no user found"
           done(null, false);
           return;
         }

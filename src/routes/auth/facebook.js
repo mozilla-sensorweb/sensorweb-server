@@ -28,22 +28,20 @@ passport.use(new Strategy(
     state: true,
   },
   function(req, accessToken, refreshToken, profile, cb) {
-    db()
-      .then(models => {
-        const { AUTH_PROVIDER, authenticate } = models.Users;
-        return authenticate(
-          AUTH_PROVIDER,
-          {
-            opaqueId: profile.id,
-            provider: 'facebook',
-            ClientKey: req.session.clientKey,
-          }
-        );
-      })
-      .then(
-        userInfo => cb(null, userInfo),
-        err => cb(err)
+    db().then(models => {
+      const { AUTH_PROVIDER, authenticate } = models.Users;
+      return authenticate(
+        AUTH_PROVIDER,
+        {
+          opaqueId: profile.id,
+          provider: 'facebook',
+          ClientKey: req.session.clientKey,
+        }
       );
+    }).then(
+      userInfo => cb(null, userInfo),
+      err => cb(err)
+    );
   }
 ));
 
