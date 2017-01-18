@@ -42,7 +42,8 @@ router.post('/',
           return ApiError(res, 401, ERRNO_UNAUTHORIZED, UNAUTHORIZED);
         }
 
-        req.user = user;
+        req[user.scope] = user.id;
+        req.authScope = user.scope;
         return next();
       }
     )(req, res, next);

@@ -4,7 +4,12 @@ import url      from 'url';
 import config   from '../../config';
 
 export default function finalizeAuth(req, res) {
-  const token = jwt.sign(req.user, config.get('adminSessionSecret'));
+  const userData = {
+    id: req[req.authScope],
+    scope: req.authScope,
+  };
+
+  const token = jwt.sign(userData, config.get('adminSessionSecret'));
 
   if (req.session && req.session.redirectUrl) {
     const redirectUrl = url.parse(req.session.redirectUrl, true);

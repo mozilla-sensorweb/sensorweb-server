@@ -55,9 +55,9 @@ export default (scopes) => {
     let secretPromise;
     switch(decoded.scope) {
       case 'client':
-        secretPromise = db()
-          .then(({ Clients }) => Clients.findById(decoded.id))
-          .then(client => client.secret);
+        secretPromise = db().then(({ Clients }) =>
+          Clients.findById(decoded.id, { attributes: ['secret'] })
+        ).then(client => client.secret);
         break;
       case 'user':
       case 'admin':
@@ -72,12 +72,12 @@ export default (scopes) => {
     secretPromise.then(secret => {
       jwt.verify(token, secret, (error) => {
         if (error) {
-          console.log(error);
           // TODO log
           return unauthorized(res);
         }
 
-        req.user = decoded;
+        req[decoded.scope] = decoded.id;
+        req.authScope = decoded.scope;
         return next();
       });
     }).catch(err => next(err || new Error('Unexpected error')));

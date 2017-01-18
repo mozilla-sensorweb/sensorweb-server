@@ -47,10 +47,11 @@ passport.use(new Strategy(
 
 function checkClientExists(req, res, next) {
   db()
-    .then(({ Clients }) => Clients.findById(req.user.id))
-    .then(client => {
+    .then(({ Clients }) =>
+      Clients.findById(req.client, { attributes: { exclude: ['secret'] }})
+    ).then(client => {
       if (client) {
-        req.user.client = client;
+        req.client = client;
         return next();
       }
 
@@ -70,7 +71,7 @@ router.get('/',
   auth(['client']),
   checkClientExists,
   (req, res, next) => {
-    const client = req.user.client;
+    const client = req.client;
     const { redirectUrl, failureUrl } = req.query;
 
     const authRedirectUrls = client.authRedirectUrls || [];
@@ -114,7 +115,9 @@ router.get(
           return ApiError(res, 401, ERRNO_UNAUTHORIZED, UNAUTHORIZED);
         }
 
-        req.user = user;
+        req[user.scope] = user.id;
+        req.authScope = user.scope;
+
         return next();
       }
     )(req, res, next);
