@@ -61,7 +61,7 @@ function checkClientExists(req, res, next) {
 }
 
 function checkHasValidSession(req, res, next) {
-  if (!req.session) {
+  if (!req.session.valid) {
     return ApiError(res, 403, ERRNO_FORBIDDEN, FORBIDDEN);
   }
 
@@ -86,6 +86,7 @@ router.get('/',
       );
     }
 
+    req.session.valid = true;
     req.session.redirectUrl = redirectUrl;
     req.session.failureUrl = failureUrl;
     req.session.clientKey = client.key;

@@ -1,5 +1,4 @@
 import express  from 'express';
-import cookieParser from 'cookie-parser';
 import session  from 'express-session';
 import SequelizeStoreFactory from 'connect-session-sequelize';
 
@@ -16,7 +15,6 @@ router.use('/basic', basic);
 // initalize sequelize with session store
 const SequelizeStore = SequelizeStoreFactory(session.Store);
 const isProduction = process.env.NODE_ENV === 'production';
-router.use(cookieParser());
 router.use(session({
   secret: 'keyboard cat',
   store: new SequelizeStore({

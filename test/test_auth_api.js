@@ -1,10 +1,12 @@
 import btoa       from 'btoa';
+import jwt        from 'jsonwebtoken';
+import nock       from 'nock';
 import should     from 'should';
 import supertest  from 'supertest-as-promised';
+import url        from 'url';
 
 import app        from '../src/server';
 import db         from '../src/models/db';
-import users      from '../src/models/users';
 import config     from '../src/config';
 import {
   errnos,
@@ -152,7 +154,13 @@ describe('Authentication API', () => {
                   .expect(302);
     });
 
-    it('should redirect to facebook with a proper token', function*() {
+    it('callback should 403 Forbidden if there is no session', function*() {
+      yield server.get(`${endpoint}/callback`)
+                  .query({ code: 'some_code' })
+                  .expect(403);
+    });
+
+    it('facebook login flow with a proper token', function*() {
       const adminToken = yield loginAsAdmin(server);
       const client = yield createClient(
         server, adminToken,
@@ -165,13 +173,51 @@ describe('Authentication API', () => {
 
       const clientToken = yield loginAsClient(server, client);
 
-      yield server.get(endpoint)
-                  .query({ authorizationToken: clientToken })
-                  .query({ redirectUrl: redirectUrls[1] })
-                  .query({ failureUrl: failureRedirectUrls[1] })
-                  .redirects(0)
-                  .expect(302);
+      // Supertest's agent keeps the cookies
+      const agent = supertest.agent(app);
+      let res = yield agent.get(endpoint)
+                           .query({ authorizationToken: clientToken })
+                           .query({ redirectUrl: redirectUrls[1] })
+                           .query({ failureUrl: failureRedirectUrls[1] })
+                           .expect(302)
+                           .expect('location', /facebook\.com/)
+                           .expect('set-cookie', /^connect\.sid\.auth=/);
 
+      // This is Faacebook's anti-CSRF protection
+      const state = url.parse(res.headers.location, true).query.state;
+
+      // Let's mock the Facebook Graph server
+      const facebook = nock('https://graph.facebook.com')
+        .post('/oauth/access_token')
+        .query(true)
+        .reply(
+          200, { access_token: 'access_token', refresh_token: 'refresh_token' }
+        )
+
+        .get('/v2.5/me')
+        .query(true)
+        .reply(200, { id: 'facebook_id' });
+
+      const expectedToken = jwt.sign({
+        id: {
+          opaqueId: 'facebook_id',
+          provider: 'facebook',
+          ClientKey: client.key,
+        },
+        scope: 'user',
+      }, config.get('adminSessionSecret'));
+
+      yield agent.get(`${endpoint}/callback`)
+                 .query({ code: 'facebook_return_code' })
+                 .query({ state })
+                 .expect(302)
+                 .expect(
+                   'location', `${redirectUrls[1]}?token=${expectedToken}`
+                 );
+
+      facebook.done();
+      nock.cleanAll();
+      nock.restore();
     });
   });
 });
