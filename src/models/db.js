@@ -9,7 +9,7 @@ import fs        from 'fs';
 import path      from 'path';
 import Sequelize from 'sequelize';
 
-const IDLE           = 0;
+const IDLE           = 0
 const INITIALIZING   = 1;
 const READY          = 2;
 
