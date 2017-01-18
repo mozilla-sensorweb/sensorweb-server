@@ -17,6 +17,8 @@ import sensorthings     from './routes/sensorthings';
 
 let app = express();
 
+app.set('trust proxy', config.get('behindProxy'));
+
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(expressValidator({
   customValidators: {

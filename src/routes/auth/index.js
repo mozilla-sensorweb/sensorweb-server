@@ -24,10 +24,9 @@ router.use(session({
   }),
   cookie: {
     path: `/${config.get('version')}/auth`,
-    secure: isProduction,
+    secure: config.get('userAuth.cookieSecure'),
   },
   name: 'connect.sid.auth',
-  proxy: isProduction, // TODO maybe better configure this in config
   resave: false,
   saveUninitialized: false,
 }));
