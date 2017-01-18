@@ -33,7 +33,8 @@ module.exports = (sequelize, DataTypes) => {
   }, {
     indexes: [{
       unique: true,
-      fields: ['opaqueId', 'provider', 'ClientKey']
+      fields: ['opaqueId', 'provider', 'clientKey']
+      // note: clientKey is a foreign key created at the association steps below
     }]
   });
 
@@ -58,9 +59,12 @@ module.exports = (sequelize, DataTypes) => {
   User.associate = (db) => {
     db.Users.belongsTo(
       db.Clients,
-      { foreignKey: { allowNull: false }, onDelete: 'CASCADE' }
+      {
+        foreignKey: { name: 'clientKey', allowNull: false },
+        onDelete: 'CASCADE',
+      }
     );
-    db.Clients.hasMany(db.Users);
+    db.Clients.hasMany(db.Users, { foreignKey: 'clientKey' });
   };
 
   Object.keys(authMethods).forEach(key => { User[key] = key; });

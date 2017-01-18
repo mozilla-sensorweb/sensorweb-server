@@ -201,7 +201,7 @@ describe('Authentication API', () => {
       const expectedId = {
         opaqueId: 'facebook_id',
         provider: 'facebook',
-        ClientKey: client.key,
+        clientKey: client.key,
       };
       const expectedToken = jwt.sign(
         { id: expectedId, scope: 'user' },

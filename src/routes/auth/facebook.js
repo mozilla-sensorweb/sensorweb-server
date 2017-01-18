@@ -35,7 +35,7 @@ passport.use(new Strategy(
         {
           opaqueId: profile.id,
           provider: 'facebook',
-          ClientKey: req.session.clientKey,
+          clientKey: req.session.clientKey,
         }
       );
     }).then(
