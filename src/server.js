@@ -11,7 +11,7 @@ import config           from './config';
 
 import clients          from './routes/clients';
 import dockerflow       from './routes/dockerflow';
-import authRoute        from './routes/auth';
+import authRouter       from './routes/auth';
 
 import sensorthings     from './routes/sensorthings';
 
@@ -42,7 +42,7 @@ app.use('/', sensorthings);
 const endpointPrefix = '/' + config.get('version');
 
 app.use(endpointPrefix + '/clients', auth(['admin']), clients);
-app.use(endpointPrefix + '/auth', authRoute);
+app.use(endpointPrefix + '/auth', authRouter);
 
 const port = config.get('port');
 app.listen(port, () => console.log(`Running on localhost:${port}`));

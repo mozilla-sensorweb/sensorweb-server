@@ -1,11 +1,11 @@
-import express  from 'express';
-import passport from 'passport';
+import express      from 'express';
+import passport     from 'passport';
 import { Strategy } from 'passport-facebook';
 
-import config   from '../../config';
-import db       from '../../models/db';
-import auth     from '../../middlewares/auth';
-import { finalizeAuth } from './utils';
+import config       from '../../config';
+import db           from '../../models/db';
+import auth         from '../../middlewares/auth';
+import finalizeAuth from './finalize_auth';
 import {
   ApiError,
   BAD_REQUEST, ERRNO_BAD_REQUEST,

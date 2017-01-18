@@ -1,10 +1,10 @@
-import express  from 'express';
+import express           from 'express';
 
-import passport from 'passport';
+import passport          from 'passport';
 import { BasicStrategy } from 'passport-http';
 
-import db       from '../../models/db';
-import { finalizeAuth } from './utils';
+import db                from '../../models/db';
+import finalizeAuth      from './finalize_auth';
 import { ApiError, UNAUTHORIZED, ERRNO_UNAUTHORIZED } from '../../errors';
 
 passport.use(new BasicStrategy(

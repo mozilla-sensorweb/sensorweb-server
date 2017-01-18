@@ -82,6 +82,11 @@ const conf = convict({
     }
   },
   userAuth: {
+    sessionSecret: {
+      doc: 'This secret is used to sign session cookie',
+      default: defaultValue,
+      format: avoidDefault,
+    },
     facebook: {
       clientId: {
         doc: 'Facebook clientId',

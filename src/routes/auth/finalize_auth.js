@@ -3,7 +3,7 @@ import url      from 'url';
 
 import config   from '../../config';
 
-export function finalizeAuth(req, res) {
+export default function finalizeAuth(req, res) {
   const token = jwt.sign(req.user, config.get('adminSessionSecret'));
 
   if (req.session && req.session.redirectUrl) {

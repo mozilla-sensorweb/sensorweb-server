@@ -12,6 +12,7 @@
     "password": "default"
   },
   "userAuth": {
+    "sessionSecret": "default",
     "facebook": {
       "clientID": "",
       "clientSecret": ""
