@@ -42,7 +42,7 @@ const conf = convict({
     default: 'invalid'
   },
   adminSessionSecret: {
-    doc: 'Secret to sign session tokens',
+    doc: 'Secret to sign admin session tokens',
     format: avoidDefault,
     default: defaultValue
   },
