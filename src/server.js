@@ -29,7 +29,7 @@ app.use(expressValidator({
 }));
 app.use(bodyParser.json());
 
-if (config.get('env') !== 'test') {
+if (config.get('env') !== 'test' || process.env.FORCE_OUTPUT) {
   logger(app);
 }
 

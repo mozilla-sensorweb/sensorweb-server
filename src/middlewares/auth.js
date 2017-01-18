@@ -77,6 +77,7 @@ export default (scopes) => {
     secretPromise.then(secret => {
       jwt.verify(token, secret, (error) => {
         if (error) {
+          console.log(error);
           // TODO log
           return unauthorized(res);
         }

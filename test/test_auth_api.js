@@ -1,8 +1,9 @@
 import btoa       from 'btoa';
 import should     from 'should';
-import supertest  from 'supertest';
+import supertest  from 'supertest-as-promised';
 
 import app        from '../src/server';
+import db         from '../src/models/db';
 import users      from '../src/models/users';
 import config     from '../src/config';
 import {
@@ -12,12 +13,18 @@ import {
   UNAUTHORIZED
 } from '../src/errors';
 
+import {
+  loginAsAdmin,
+  loginAsClient,
+  createClient,
+} from './common';
+
 const endpointPrefix = '/' + config.get('version');
-const server = supertest.agent(app);
+const server = supertest(app);
 
 describe('Authentication API', () => {
   describe('POST ' + endpointPrefix + '/auth/basic', () => {
-    it('should response 401 Unauthorized if there is no auth header', done => {
+    it('should respond 401 Unauthorized if there is no auth header', done => {
       server.post(endpointPrefix + '/auth/basic')
             .expect(401)
             .end((err, res) => {
@@ -29,7 +36,7 @@ describe('Authentication API', () => {
             });
     });
 
-    it('should response 401 Unauthorized if auth header is invalid', done => {
+    it('should respond 401 Unauthorized if auth header is invalid', done => {
       server.post(endpointPrefix + '/auth/basic')
             .set('Authorization', 'Invalid')
             .expect(401)
@@ -42,7 +49,7 @@ describe('Authentication API', () => {
             });
     });
 
-    it('should response 401 Unauthorized if admin pass is incorrect', done => {
+    it('should respond 401 Unauthorized if admin pass is incorrect', done => {
       server.post(endpointPrefix + '/auth/basic')
             .set('Authorization', 'Basic invalidpassword')
             .expect(401)
@@ -55,7 +62,7 @@ describe('Authentication API', () => {
             });
     });
 
-    it('should response 201 Created if admin pass is correct', done => {
+    it('should respond 201 Created if admin pass is correct', done => {
       const pass = btoa('admin:' + config.get('adminPass'));
       server.post(endpointPrefix + '/auth/basic')
             .set('Authorization', 'Basic ' + pass)
@@ -68,9 +75,103 @@ describe('Authentication API', () => {
     });
   });
 
-  describe.only(`POST ${endpointPrefix}/auth/facebook`, function() {
-    it('should redirect to the facebook endpoint', function*() {
-      
-    })
+  describe.only(`GET ${endpointPrefix}/auth/facebook`, function() {
+    const endpoint = `${endpointPrefix}/auth/facebook`;
+    const redirectUrls = [
+      'http://redirect.me/1',
+      'http://redirect.me/2'
+    ];
+    const failureRedirectUrls = [
+      'http://failure.redirect.me/1',
+      'http://failure.redirect.me/2'
+    ];
+
+    beforeEach(function*() {
+      const { Clients } = yield db();
+      yield Clients.destroy({ where: {}});
+    });
+
+    it('should respond 401 unauthorized if there is no client token', function*() {
+      yield server.get(endpoint)
+                  .expect(401)
+                  .expect({
+                    code: 401,
+                    errno: errnos[ERRNO_UNAUTHORIZED],
+                    error: errors[UNAUTHORIZED]
+                  });
+    });
+
+    it('should respond 401 unauthorized with a bad token', function*() {
+      yield server.get(endpoint)
+                  .query({ authorizationToken: 'blablabla' })
+                  .expect(401)
+                  .expect({
+                    code: 401,
+                    errno: errnos[ERRNO_UNAUTHORIZED],
+                    error: errors[UNAUTHORIZED]
+                  });
+
+    });
+
+    it('should respond 400 if the client has no redirect url', function*() {
+      const adminToken = yield loginAsAdmin(server);
+      const client = yield createClient(server, adminToken, { name: 'test' });
+      const clientToken = yield loginAsClient(server, client);
+
+      yield server.get(endpoint)
+                  .query({ authorizationToken: clientToken })
+                  .query({ redirectUrl: redirectUrls[0] })
+                  .expect(400);
+    });
+
+    it('should respond 400 if the redirect urls mismatch', function*() {
+      const adminToken = yield loginAsAdmin(server);
+      const client = yield createClient(
+        server, adminToken,
+        {
+          name: 'test',
+          authRedirectUrls: [ redirectUrls[0] ],
+          authFailureRedirectUrls: [ failureRedirectUrls[0] ],
+        }
+      );
+
+      const clientToken = yield loginAsClient(server, client);
+
+      yield server.get(endpoint)
+                  .query({ authorizationToken: clientToken })
+                  .query({ redirectUrl: redirectUrls[1] })
+                  .expect(400);
+
+      yield server.get(endpoint)
+                  .query({ authorizationToken: clientToken })
+                  .expect(400);
+
+      yield server.get(endpoint)
+                  .query({ authorizationToken: clientToken })
+                  .query({ redirectUrl: redirectUrls[0] })
+                  .expect(302);
+    });
+
+    it('should redirect to facebook with a proper token', function*() {
+      const adminToken = yield loginAsAdmin(server);
+      const client = yield createClient(
+        server, adminToken,
+        {
+          name: 'test',
+          authRedirectUrls: redirectUrls,
+          authFailureRedirectUrls: failureRedirectUrls,
+        }
+      );
+
+      const clientToken = yield loginAsClient(server, client);
+
+      yield server.get(endpoint)
+                  .query({ authorizationToken: clientToken })
+                  .query({ redirectUrl: redirectUrls[1] })
+                  .query({ failureUrl: failureRedirectUrls[1] })
+                  .redirects(0)
+                  .expect(302);
+
+    });
   });
 });

@@ -34,6 +34,10 @@ router.use(session({
 
 if (config.get('facebook.clientID')) {
   router.use('/facebook', facebook);
+} else {
+  console.log(
+    'No Facebook configuration, so not loading Facebook login endpoint'
+  );
 }
 
 export default router;

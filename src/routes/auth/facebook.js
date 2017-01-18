@@ -75,8 +75,11 @@ router.get('/',
     const client = req.user.client;
     const { redirectUrl, failureUrl } = req.query;
 
-    if (!client.authRedirectUrls.includes(redirectUrl) ||
-        !client.authFailureRedirectUrls.includes(failureUrl)) {
+    const authRedirectUrls = client.authRedirectUrls || [];
+    const authFailureRedirectUrls = client.authFailureRedirectUrls || [];
+
+    if (!authRedirectUrls.includes(redirectUrl) ||
+        (failureUrl && !authFailureRedirectUrls.includes(failureUrl))) {
       return ApiError(
         res, 400, ERRNO_BAD_REQUEST, BAD_REQUEST,
         'The redirect and failure URLs must be declared in your account'
