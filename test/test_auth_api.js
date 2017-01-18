@@ -77,7 +77,7 @@ describe('Authentication API', () => {
     });
   });
 
-  describe.only(`GET ${endpointPrefix}/auth/facebook`, function() {
+  describe(`GET ${endpointPrefix}/auth/facebook`, function() {
     const endpoint = `${endpointPrefix}/auth/facebook`;
     const redirectUrls = [
       'http://redirect.me/1',
