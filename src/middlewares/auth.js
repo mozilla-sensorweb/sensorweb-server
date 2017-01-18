@@ -48,7 +48,7 @@ export default (scopes) => {
     }
 
     if (!validScopes.includes(decoded.scope)) {
-      // TODO log
+      console.log('Error while authenticating, invalid scope', decoded);
       return unauthorized(res);
     }
 
@@ -72,7 +72,7 @@ export default (scopes) => {
     secretPromise.then(secret => {
       jwt.verify(token, secret, (error) => {
         if (error) {
-          // TODO log
+          console.log('Error while verifying the token', error);
           return unauthorized(res);
         }
 
