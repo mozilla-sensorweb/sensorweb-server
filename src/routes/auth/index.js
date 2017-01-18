@@ -30,7 +30,7 @@ router.use(session({
   saveUninitialized: false,
 }));
 
-if (config.get('facebook.clientID')) {
+if (config.get('userAuth.facebook.clientID')) {
   router.use('/facebook', facebook);
 } else {
   console.log(

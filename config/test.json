@@ -11,9 +11,11 @@
     "user": "postgres",
     "password": "default"
   },
-  "facebook": {
-    "clientID": "some_client_id",
-    "clientSecret": "some_client_secret"
+  "userAuth": {
+    "facebook": {
+      "clientID": "some_client_id",
+      "clientSecret": "some_client_secret"
+    }
   },
   "version": "v1.0"
 }

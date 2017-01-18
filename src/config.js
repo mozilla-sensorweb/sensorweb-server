@@ -81,14 +81,16 @@ const conf = convict({
       default: '',
     }
   },
-  facebook: {
-    clientId: {
-      doc: 'Facebook clientId',
-      format: 'nat'
-    },
-    clientSecret: {
-      doc: 'Facebook clientSecret',
-      format: 'hex'
+  userAuth: {
+    facebook: {
+      clientId: {
+        doc: 'Facebook clientId',
+        format: 'nat'
+      },
+      clientSecret: {
+        doc: 'Facebook clientSecret',
+        format: 'hex'
+      },
     },
   },
   publicHost: {

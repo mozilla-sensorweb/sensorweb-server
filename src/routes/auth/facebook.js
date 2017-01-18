@@ -20,8 +20,8 @@ const callbackURL =
 
 passport.use(new Strategy(
   {
-    clientID: config.get('facebook.clientID'),
-    clientSecret: config.get('facebook.clientSecret'),
+    clientID: config.get('userAuth.facebook.clientID'),
+    clientSecret: config.get('userAuth.facebook.clientSecret'),
     callbackURL,
     passReqToCallback: true,
     enableProof: true,

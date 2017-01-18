@@ -11,9 +11,11 @@
     "user": "postgres",
     "password": "default"
   },
-  "facebook": {
-    "clientID": "",
-    "clientSecret": ""
+  "userAuth": {
+    "facebook": {
+      "clientID": "",
+      "clientSecret": ""
+    }
   },
   "sensorthings": {
     "server": "https://pg-api.sensorup.com",
