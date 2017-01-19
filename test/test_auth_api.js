@@ -25,6 +25,7 @@ const endpointPrefix = '/' + config.get('version');
 const server = supertest(app);
 
 describe('Authentication API', () => {
+  // TODO Use Template Strings, promises and generators. (issue #59)
   describe('POST ' + endpointPrefix + '/auth/basic', () => {
     it('should respond 401 Unauthorized if there is no auth header', done => {
       server.post(endpointPrefix + '/auth/basic')
@@ -183,7 +184,7 @@ describe('Authentication API', () => {
                            .expect('location', /facebook\.com/)
                            .expect('set-cookie', /^connect\.sid\.auth=/);
 
-      // This is Faacebook's anti-CSRF protection
+      // This is Facebook's anti-CSRF protection
       const state = url.parse(res.headers.location, true).query.state;
 
       // Let's mock the Facebook Graph server

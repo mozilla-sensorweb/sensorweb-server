@@ -111,6 +111,8 @@ const conf = convict({
           userAuth.cookieSecure. Also with this Express will trust the
           X-Forwarded-For header. Set to 1 or auto if you're behind a proxy.`,
     default: false,
+    // Format is "*" because otherwise convict infers it's a boolean from the
+    // default value and will refuse 1 or "auto".
     format: '*',
   },
   userAuth: {

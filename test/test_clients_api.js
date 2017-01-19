@@ -23,6 +23,7 @@ let token;
 
 describe('Clients API', () => {
   before((done) => {
+    // XXX use common's loginAsAdmin function (issue #60)
     const pass = btoa('admin:' + config.get('adminPass'));
     server.post(endpointPrefix + '/auth/basic')
           .set('Authorization', 'Basic ' + pass)

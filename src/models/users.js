@@ -12,6 +12,7 @@ const authMethods = {
       return Promise.reject(new Error(UNAUTHORIZED));
     }
 
+    // Currently Basic authentication is for admins only so let's hardcode this.
     return Promise.resolve({
       id: 'admin',
       scope: 'admin'
@@ -19,6 +20,7 @@ const authMethods = {
   },
 
   AUTH_PROVIDER: (data) => {
+    // We use this authentication method only for users.
     return Promise.resolve({
       id: data,
       scope: 'user'

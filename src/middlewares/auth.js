@@ -28,6 +28,7 @@ export default (scopes) => {
 
   return (req, res, next) => {
     const authHeader = req.headers.authorization;
+    // Accepting a query parameter as well allows GET requests.
     const authQuery = req.query.authorizationToken;
 
     if (!authHeader && !authQuery) {

@@ -102,6 +102,8 @@ router.get(
   (req, res, next) => {
     passport.authenticate(
       'facebook',
+      // Using the callback is the only way to customize how to respond to a
+      // failure. Otherwise it's always a 401 without a body.
       (err, user, _info) => {
         if (err) {
           return next(err);
