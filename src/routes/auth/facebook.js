@@ -117,9 +117,7 @@ router.get(
           return ApiError(res, 401, ERRNO_UNAUTHORIZED, UNAUTHORIZED);
         }
 
-        req[user.scope] = user.id;
-        req.authScope = user.scope;
-
+        req.user = user;
         return next();
       }
     )(req, res, next);

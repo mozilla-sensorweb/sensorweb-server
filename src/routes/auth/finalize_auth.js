@@ -4,10 +4,10 @@ import url      from 'url';
 import config   from '../../config';
 
 export default function finalizeAuth(req, res) {
-  const userData = {
-    id: req[req.authScope],
-    scope: req.authScope,
-  };
+  const userData = req.user;
+  delete req.user;
+  req[userData.scope] = userData.id;
+  req.authScope = userData.scope;
 
   const token = jwt.sign(userData, config.get('adminSessionSecret'));
 
