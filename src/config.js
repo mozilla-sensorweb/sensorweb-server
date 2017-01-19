@@ -26,6 +26,15 @@ convict.addFormat({
   coerce: (val) => (val === null ? null : parseInt(val))
 });
 
+convict.addFormat({
+  name: 'hex',
+  validate: function(val) {
+    if (/[^a-fA-F0-9]/.test(val)) {
+      throw new Error('must be a hex key');
+    }
+  }
+});
+
 const conf = convict({
   adminPass: {
     doc: 'The password for the admin user. Follow OWASP guidelines for passwords',
@@ -72,6 +81,9 @@ const conf = convict({
       default: '',
     }
   },
+  publicHost: {
+    doc: 'Public host for this server, especially for auth callback'
+  },
   sensorthings: {
     server: {
       doc: 'SensorThings remote API server',
@@ -92,6 +104,39 @@ const conf = convict({
         default: defaultValue
       }
     }
+  },
+  behindProxy: {
+    doc: `Set this to true if the server runs behind a reverse proxy. This is
+          especially important if the proxy implements HTTPS with
+          userAuth.cookieSecure. Also with this Express will trust the
+          X-Forwarded-For header. Set to 1 or auto if you're behind a proxy.`,
+    default: false,
+    // Format is "*" because otherwise convict infers it's a boolean from the
+    // default value and will refuse 1 or "auto".
+    format: '*',
+  },
+  userAuth: {
+    cookieSecure: {
+      doc: `This configures whether the cookie should be set and sent for
+            HTTPS only. This is important to set to 'true' if the application
+            runs on HTTPS.`,
+      default: false,
+    },
+    sessionSecret: {
+      doc: 'This secret is used to sign session cookie',
+      default: defaultValue,
+      format: avoidDefault,
+    },
+    facebook: {
+      clientId: {
+        doc: 'Facebook clientId',
+        format: 'nat'
+      },
+      clientSecret: {
+        doc: 'Facebook clientSecret',
+        format: 'hex'
+      },
+    },
   },
   version: {
     doc: 'API version. We follow SensorThing\'s versioning format as described at http://docs.opengeospatial.org/is/15-078r6/15-078r6.html#34',

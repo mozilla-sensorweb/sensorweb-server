@@ -3,12 +3,20 @@
   "adminSessionSecret": "default",
   "env": "dev",
   "port": 8080,
+  "publicHost": "http://localhost:8080",
   "db": {
     "host": "localhost",
     "port": 5432,
     "name": "sensorweb",
     "user": "postgres",
     "password": "default"
+  },
+  "userAuth": {
+    "sessionSecret": "default",
+    "facebook": {
+      "clientID": "",
+      "clientSecret": ""
+    }
   },
   "sensorthings": {
     "server": "https://pg-api.sensorup.com",

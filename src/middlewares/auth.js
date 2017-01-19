@@ -4,6 +4,7 @@
 
 import jwt    from 'jsonwebtoken';
 import config from '../config';
+import db     from '../models/db';
 
 import {
   ApiError,
@@ -16,13 +17,25 @@ function unauthorized(res) {
 }
 
 export default (scopes) => {
+  // For now we only allow 'admin' scope.
+  const validScopes = ['admin', 'client', 'user'].filter(
+    scope => scopes.includes(scope)
+  );
+
+  if (!validScopes.length) {
+    throw new Error(`No valid scope found in "${scopes}"`);
+  }
+
   return (req, res, next) => {
-    const authHeader = req.headers['authorization'];
-    if (!authHeader) {
+    const authHeader = req.headers.authorization;
+    // Accepting a query parameter as well allows GET requests.
+    const authQuery = req.query.authorizationToken;
+
+    if (!authHeader && !authQuery) {
       return unauthorized(res);
     }
 
-    const token = authHeader.split('Bearer ')[1];
+    const token = authHeader ? authHeader.split('Bearer ')[1] : authQuery;
     if (!token) {
       return unauthorized(res);
     }
@@ -31,36 +44,43 @@ export default (scopes) => {
     // need to get the owner of the token so we can get the appropriate secret.
     const decoded = jwt.decode(token);
 
-    // For now we only allow authenticated requests from the admin user.
-    // When this changes we will have a different secret per sensor and per
-    // user.
-    if (!decoded || !decoded.id || decoded.id !== 'admin') {
+    if (!decoded || !decoded.id || !decoded.scope) {
       return unauthorized(res);
-    };
+    }
 
-    const secret = config.get('adminSessionSecret');
+    if (!validScopes.includes(decoded.scope)) {
+      console.log('Error while authenticating, invalid scope', decoded);
+      return unauthorized(res);
+    }
+
+    let secretPromise;
+    switch(decoded.scope) {
+      case 'client':
+        secretPromise = db().then(({ Clients }) =>
+          Clients.findById(decoded.id, { attributes: ['secret'] })
+        ).then(client => client.secret);
+        break;
+      case 'user':
+      case 'admin':
+        secretPromise = Promise.resolve(config.get('adminSessionSecret'));
+        break;
+      default:
+        // should not happen because we check this earlier
+        next(new Error(`Unknown scope ${decoded.scope}`));
+    }
 
     // Verify JWT signature.
-    jwt.verify(token, secret, (error, decoded) => {
-      if (error) {
-        return unauthorized(res);
-      }
+    secretPromise.then(secret => {
+      jwt.verify(token, secret, (error) => {
+        if (error) {
+          console.log('Error while verifying the token', error);
+          return unauthorized(res);
+        }
 
-      // XXX Get allowed scopes from sensor/user.
-
-      // For now we only allow 'admin' scope.
-      const validScopes = ['admin'].filter(scopeIndex => {
-        return scopes.indexOf(scopeIndex) != -1;
+        req[decoded.scope] = decoded.id;
+        req.authScope = decoded.scope;
+        return next();
       });
-
-      if (!validScopes.length) {
-        return unauthorized(res);
-      }
-
-      // If everything is good, save the decoded payload for use in other
-      // routes.
-      req.decoded = decoded;
-      next();
-    });
+    }).catch(err => next(err || new Error('Unexpected error')));
   };
 };

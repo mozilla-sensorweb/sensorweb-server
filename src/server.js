@@ -11,11 +11,13 @@ import config           from './config';
 
 import clients          from './routes/clients';
 import dockerflow       from './routes/dockerflow';
-import users            from './routes/users';
+import authRouter       from './routes/auth';
 
 import sensorthings     from './routes/sensorthings';
 
 let app = express();
+
+app.set('trust proxy', config.get('behindProxy'));
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(expressValidator({
@@ -29,7 +31,7 @@ app.use(expressValidator({
 }));
 app.use(bodyParser.json());
 
-if (config.get('env') !== 'test') {
+if (config.get('env') !== 'test' || process.env.FORCE_OUTPUT) {
   logger(app);
 }
 
@@ -42,7 +44,7 @@ app.use('/', sensorthings);
 const endpointPrefix = '/' + config.get('version');
 
 app.use(endpointPrefix + '/clients', auth(['admin']), clients);
-app.use(endpointPrefix + '/users', users);
+app.use(endpointPrefix + '/auth', authRouter);
 
 const port = config.get('port');
 app.listen(port, () => console.log(`Running on localhost:${port}`));

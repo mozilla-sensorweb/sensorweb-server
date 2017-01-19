@@ -27,7 +27,16 @@ let deferreds = [];
 let state = IDLE;
 let db    = null;
 
-module.exports = () => {
+const { name, user, password, host, port } = config.get('db');
+
+const sequelize = new Sequelize(name, user, password, {
+  host,
+  port,
+  dialect: 'postgres',
+  logging: false
+});
+
+export default function() {
   if (state === READY) {
     return Promise.resolve(db);
   }
@@ -41,24 +50,13 @@ module.exports = () => {
 
   state = INITIALIZING;
 
-  const dbConfig = config.get('db');
-  const { name, user, password, host, port } = dbConfig;
-
-  const sequelize = new Sequelize(name, user, password, {
-    host,
-    port,
-    dialect: 'postgres',
-    logging: false
-  });
-
   db = {};
 
   fs.readdirSync(__dirname)
     .filter(file => {
       return ((file.indexOf('.js') !== 0) &&
-              (file !== 'db.js') &&
-              (file !== 'users.js') &&
-              (file.indexOf('.swp') < 0));
+              !file.startsWith('.') &&
+              (file !== 'db.js'));
     })
     .forEach(file => {
       const model = sequelize.import(path.join(__dirname, file));
@@ -74,7 +72,7 @@ module.exports = () => {
   db.sequelize = sequelize;
   db.Sequelize = Sequelize;
 
-  return db.sequelize.sync().then(() => {
+  return sequelize.sync().then(() => {
     while (deferreds.length) {
       deferreds.pop().resolve(db);
     }
@@ -86,4 +84,6 @@ module.exports = () => {
       deferreds.pop().reject(e);
     }
   });
-};
+}
+
+export { sequelize, Sequelize };
