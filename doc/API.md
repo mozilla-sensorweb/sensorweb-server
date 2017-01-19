@@ -69,18 +69,19 @@ The currently-defined error responses are:
 # API Endpoints
 
 * Login
-  * [POST /users/auth](#post-usersauth)
+  * [POST /auth/basic](#post-authbasic)
+  * [GET /auth/facebook](#get-authfacebook)
 * API clients management
   * [POST /clients](#post-clients) :lock: (admin scope required)
   * [GET /clients](#get-clients) :lock: (admin scope required)
   * [DELETE /clients/:key](#delete-clientskey) :lock: (admin scope required)
 
-## POST /users/auth
-Authenticates a user. So far only an admin user is allowed.
+## POST /auth/basic
+Authenticates a user using Basic authentication. So far only an admin user is allowed.
 ### Request
 Requests must include a [basic authorization header](https://en.wikipedia.org/wiki/Basic_access_authentication#Client_side) with `username:password` encoded in Base64.
 ```ssh
-POST /api/users/auth HTTP/1.1
+POST /api/auth/basic HTTP/1.1
 Authorization: Basic YWRtaW46QXZhbGlkUGFzc3dvcmQuMA==
 Cache-Control: no-cache
 ```
@@ -105,6 +106,26 @@ Date: Fri, 23 Sep 2016 16:22:39 GMT
   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImFkbWluIiwic2NvcGUiOiJhZG1pbiIsImlhdCI6MTQ3NDY0Nzc1OX0.R1vQOLVg8A-6i5QaZQVOGAzImiPvgAdkWiODYhYiNn4"
 }
 ```
+
+## GET /auth/facebook
+Authenticates a user using his Facebook account.
+### Request
+The request must include several query parameters:
+* `authorizationToken`: this contains your client's JWT signed with your secret.
+    Its payload should be `{ id: <key>, scope: 'client' }`.
+* `redirectUrl`: this contains the URL you'd like to be redirected after a
+    successful login. This URL needs to be associated with your client
+    information first.
+
+  It will gets the user's JWT as a query parameter `token`.
+* `failureUrl` (optional): this contains the URL you'd like to be redirected
+    after a failure. This URL needs to be associated with your client
+    information first.
+
+### Response
+A successful request will redirect the user to the facebook login page. Then
+after a successful login the user will eventually be redirected to the URL
+specified in `redirectUrl` with a `token` parameter.
 
 ## POST /clients
 Creates a new API client.
