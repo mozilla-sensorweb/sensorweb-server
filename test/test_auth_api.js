@@ -106,7 +106,7 @@ describe('Authentication API', () => {
 
     it('should respond 401 unauthorized with a bad token', function*() {
       yield server.get(endpoint)
-                  .query({ authorizationToken: 'blablabla' })
+                  .query({ authToken: 'blablabla' })
                   .expect(401)
                   .expect({
                     code: 401,
@@ -124,7 +124,7 @@ describe('Authentication API', () => {
       });
 
       yield server.get(endpoint)
-                  .query({ authorizationToken: authToken })
+                  .query({ authToken: authToken })
                   .expect(400);
     });
 
@@ -144,13 +144,13 @@ describe('Authentication API', () => {
       });
 
       yield server.get(endpoint)
-                  .query({ authorizationToken: authToken })
+                  .query({ authToken: authToken })
                   .expect(400);
 
       authToken = yield signClientRequest(client, null);
 
       yield server.get(endpoint)
-                  .query({ authorizationToken: authToken })
+                  .query({ authToken: authToken })
                   .expect(400);
 
       authToken = yield signClientRequest(client, {
@@ -158,7 +158,7 @@ describe('Authentication API', () => {
       });
 
       yield server.get(endpoint)
-                  .query({ authorizationToken: authToken })
+                  .query({ authToken: authToken })
                   .expect(302);
     });
 
@@ -187,7 +187,7 @@ describe('Authentication API', () => {
       // Supertest's agent keeps the cookies
       const agent = supertest.agent(app);
       let res = yield agent.get(endpoint)
-                           .query({ authorizationToken: authToken })
+                           .query({ authToken: authToken })
                            .expect(302)
                            .expect('location', /facebook\.com/)
                            .expect('set-cookie', /^connect\.sid\.auth=/);
