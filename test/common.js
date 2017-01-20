@@ -27,10 +27,10 @@ export function createClient(server, adminToken, client) {
   });
 }
 
-export function loginAsClient(server, client) {
-  // TODO we should login as the client instead of generating a JWT here
-  return Promise.resolve(jwt.sign({
+export function signClientRequest(client, payload) {
+  const request = Object.assign({
     id: client.key,
     scope: 'client'
-  }, client.secret));
+  }, payload);
+  return Promise.resolve(jwt.sign(request, client.secret));
 }

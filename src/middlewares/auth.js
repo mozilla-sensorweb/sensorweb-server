@@ -77,8 +77,13 @@ export default (scopes) => {
           return unauthorized(res);
         }
 
-        req[decoded.scope] = decoded.id;
-        req.authScope = decoded.scope;
+        // XXX s/id/clientId/g
+        req.clientId = decoded.id;
+        delete decoded.id;
+        req.authPayload = decoded;
+
+        //XXX req[decoded.scope] = decoded.id;
+        //XXX req.authScope = decoded.scope;
         return next();
       });
     }).catch(err => next(err || new Error('Unexpected error')));
