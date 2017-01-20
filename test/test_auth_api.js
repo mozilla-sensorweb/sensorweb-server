@@ -204,18 +204,17 @@ describe('Authentication API', () => {
         provider: 'facebook',
         clientKey: client.key,
       };
-      const expectedToken = jwt.sign(
-        { id: expectedId, scope: 'user' },
-        config.get('adminSessionSecret')
-      );
 
-      yield agent.get(`${endpoint}/callback`)
+      res = yield agent.get(`${endpoint}/callback`)
                  .query({ code: 'facebook_return_code' })
                  .query({ state })
                  .expect(302)
                  .expect(
-                   'location', `${redirectUrls[1]}?token=${expectedToken}`
+                   'location', new RegExp(`^${redirectUrls[1]}\\?token=`)
                  );
+      const token = url.parse(res.headers.location, true).query.token;
+      const decodedToken = jwt.verify(token, config.get('adminSessionSecret'));
+      decodedToken.should.match({ id: expectedId, scope: 'user' });
 
       facebook.done();
       nock.cleanAll();
