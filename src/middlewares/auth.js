@@ -29,7 +29,7 @@ export default (scopes) => {
   return (req, res, next) => {
     const authHeader = req.headers.authorization;
     // User auth flows require to perform a redirection to the IdP auth
-    // flow. Accepting the auth token as a query parameter as well allow
+    // flow. Accepting the auth token as a query parameter as well allows
     // clients to initiate this redirection from browsers by sending a
     // GET request to any of our /auth/* endpoints dealing with user
     // authentication.
@@ -86,8 +86,10 @@ export default (scopes) => {
         delete decoded.id;
         req.authPayload = decoded;
 
-        //XXX req[decoded.scope] = decoded.id;
-        //XXX req.authScope = decoded.scope;
+        // XXX Get rid of this. Kept only to keep user tokens working. Issue #68
+        req[decoded.scope] = decoded.id;
+        req.authScope = decoded.scope;
+
         return next();
       });
     }).catch(err => next(err || new Error('Unexpected error')));

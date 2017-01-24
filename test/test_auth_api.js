@@ -119,9 +119,9 @@ describe('Authentication API', () => {
     it('should respond 400 if the client has no redirect url', function*() {
       const adminToken = yield loginAsAdmin(server);
       const client = yield createClient(server, adminToken, { name: 'test' });
-      const authToken = yield signClientRequest(client, {
-        redirectUrl: redirectUrls[0]
-      });
+      const authToken = yield signClientRequest(
+        client, { redirectUrl: redirectUrls[0] }
+      );
 
       yield server.get(endpoint)
                   .query({ authToken: authToken })

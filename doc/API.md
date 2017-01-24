@@ -103,7 +103,6 @@ with `username:password` encoded in Base64.
 ```ssh
 POST /api/auth/basic HTTP/1.1
 Authorization: Basic YWRtaW46QXZhbGlkUGFzc3dvcmQuMA==
-Cache-Control: no-cache
 ```
 ### Response
 Successful requests will produce a "201 Created" response with a session token 
@@ -132,20 +131,19 @@ Date: Fri, 23 Sep 2016 16:22:39 GMT
 ## GET /auth/facebook
 Authenticates a user using his Facebook account.
 ### Request
-Requests must include an JWT signed with a valid client secret as the 
+Requests must include a JWT signed with a valid client secret as the 
 `authToken` query parameter.
 
 ```ssh
-POST /api/auth/facebook?authToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjb
-GllbnRJZCI6IjEyMzQ1Njc4OTAiLCJzY29wZXMiOlsidXNlci1mYXZvcml0ZXMiXSwiYXV0aFJlZ
-GlyZWN0VXJscyI6WyJodHRwczovL2RvbWFpbi5vcmcvYXV0aC9zdWNjZXNzIl0sImF1dGhGYWlsd
-XJlVXJscyI6WyJodHRwczovL2RvbWFpbi5vcmcvYXV0aC9lcnJvciJdfQ.e7rYEZsQNLG0aTjDRH
+POST /api/auth/facebook?authToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjb\
+GllbnRJZCI6IjEyMzQ1Njc4OTAiLCJzY29wZXMiOlsidXNlci1mYXZvcml0ZXMiXSwiYXV0aFJlZ\
+GlyZWN0VXJscyI6WyJodHRwczovL2RvbWFpbi5vcmcvYXV0aC9zdWNjZXNzIl0sImF1dGhGYWlsd\
+XJlVXJscyI6WyJodHRwczovL2RvbWFpbi5vcmcvYXV0aC9lcnJvciJdfQ.e7rYEZsQNLG0aTjDRH\
 sQ2xembu3fyVe-B9bm8mFprwQ HTTP/1.1
-Cache-Control: no-cache
 ```
 
 The payload of the signed JWT must include the following information:
-* `id`: client identifier.
+* `id`: client identifier, aka his key.
 * `scope`: just `client` for now.
 * `redirectUrl`: the URL you would like to be redirected after a
     successful login. This URL needs to be associated with your client
@@ -166,8 +164,9 @@ jbGllbnRJZCI6IjEyMzQ1NiIsInNjb3BlIjoidXNlciJ9.nU1LD8gyVxd8kjNJhLlEwhUbohVW3TQ1
 T5hRvYamAiQ
 ```
 
-This session token will be in the form of a signed[JWT](https://jwt.io/) with 
-the following data:
+This session token can be used in following requests that require user 
+authentication and it is provided in the form of a signed [JWT](https://jwt.io/) 
+with the following data:
 
 ```json
 {
@@ -191,7 +190,6 @@ ___Parameters___
 ```ssh
 POST /api/clients HTTP/1.1
 Content-Type: application/json
-Cache-Control: no-cache
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImFkbWluIiwic2NvcGUiOiJhZG1pbiIsImlhdCI6MTQ3NDY0Nzc1OX0.R1vQOLVg8A-6i5QaZQVOGAzImiPvgAdkWiODYhYiNn4
 {
     "name": "SensorWebClient",
@@ -221,7 +219,6 @@ Get the list of registered API clients.
 ### Request
 ```ssh
 GET /api/clients HTTP/1.1
-Cache-Control: no-cache
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImFkbWluIiwic2NvcGUiOiJhZG1pbiIsImlhdCI6MTQ3NDY0Nzc1OX0.R1vQOLVg8A-6i5QaZQVOGAzImiPvgAdkWiODYhYiNn4
 ```
 
@@ -248,7 +245,6 @@ Deletes a registered API client given its identifier.
 ```ssh
 DELETE /api/clients/766a06dab7358b6aec17891df1fe8555 HTTP/1.1
 Host: localhost:8080
-Cache-Control: no-cache
 ```
 
 ### Response
