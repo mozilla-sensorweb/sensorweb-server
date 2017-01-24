@@ -83,7 +83,6 @@ export default (scopes) => {
 
         // XXX s/id/clientId/g
         req.clientId = decoded.id;
-        delete decoded.id;
         req.authPayload = decoded;
 
         // XXX Get rid of this. Kept only to keep user tokens working. Issue #68

@@ -139,9 +139,9 @@ describe('Authentication API', () => {
         }
       );
 
-      let authToken = yield signClientRequest(client, {
-        redirectUrl: redirectUrls[1]
-      });
+      let authToken = yield signClientRequest(
+        client, { redirectUrl: redirectUrls[1] }
+      );
 
       yield server.get(endpoint)
                   .query({ authToken: authToken })
@@ -153,9 +153,9 @@ describe('Authentication API', () => {
                   .query({ authToken: authToken })
                   .expect(400);
 
-      authToken = yield signClientRequest(client, {
-        redirectUrl: redirectUrls[0]
-      });
+      authToken = yield signClientRequest(
+        client, { redirectUrl: redirectUrls[0] }
+      );
 
       yield server.get(endpoint)
                   .query({ authToken: authToken })
