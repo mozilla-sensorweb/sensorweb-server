@@ -46,17 +46,16 @@ passport.use(new Strategy(
 ));
 
 function checkClientExists(req, res, next) {
-  db()
-    .then(({ Clients }) =>
-      Clients.findById(req.client, { attributes: { exclude: ['secret'] }})
-    ).then(client => {
-      if (client) {
-        req.client = client;
-        return next();
-      }
+  db().then(({ Clients }) =>
+    Clients.findById(req.clientId, { attributes: { exclude: ['secret'] }})
+  ).then(client => {
+    if (client) {
+      req.client = client;
+      return next();
+    }
 
-      return ApiError(res, 403, ERRNO_FORBIDDEN, FORBIDDEN);
-    });
+    return ApiError(res, 403, ERRNO_FORBIDDEN, FORBIDDEN);
+  });
 }
 
 function checkHasValidSession(req, res, next) {
@@ -72,7 +71,7 @@ router.get('/',
   checkClientExists,
   (req, res, next) => {
     const client = req.client;
-    const { redirectUrl, failureUrl } = req.query;
+    const { redirectUrl, failureUrl } = req.authPayload;
 
     const authRedirectUrls = client.authRedirectUrls || [];
     const authFailureRedirectUrls = client.authFailureRedirectUrls || [];

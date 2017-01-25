@@ -16,9 +16,9 @@ import {
 } from '../src/errors';
 
 import {
-  loginAsAdmin,
-  loginAsClient,
   createClient,
+  loginAsAdmin,
+  signClientRequest
 } from './common';
 
 const endpointPrefix = '/' + config.get('version');
@@ -106,7 +106,7 @@ describe('Authentication API', () => {
 
     it('should respond 401 unauthorized with a bad token', function*() {
       yield server.get(endpoint)
-                  .query({ authorizationToken: 'blablabla' })
+                  .query({ authToken: 'blablabla' })
                   .expect(401)
                   .expect({
                     code: 401,
@@ -119,11 +119,12 @@ describe('Authentication API', () => {
     it('should respond 400 if the client has no redirect url', function*() {
       const adminToken = yield loginAsAdmin(server);
       const client = yield createClient(server, adminToken, { name: 'test' });
-      const clientToken = yield loginAsClient(server, client);
+      const authToken = yield signClientRequest(
+        client, { redirectUrl: redirectUrls[0] }
+      );
 
       yield server.get(endpoint)
-                  .query({ authorizationToken: clientToken })
-                  .query({ redirectUrl: redirectUrls[0] })
+                  .query({ authToken: authToken })
                   .expect(400);
     });
 
@@ -138,20 +139,26 @@ describe('Authentication API', () => {
         }
       );
 
-      const clientToken = yield loginAsClient(server, client);
+      let authToken = yield signClientRequest(
+        client, { redirectUrl: redirectUrls[1] }
+      );
 
       yield server.get(endpoint)
-                  .query({ authorizationToken: clientToken })
-                  .query({ redirectUrl: redirectUrls[1] })
+                  .query({ authToken: authToken })
                   .expect(400);
 
-      yield server.get(endpoint)
-                  .query({ authorizationToken: clientToken })
-                  .expect(400);
+      authToken = yield signClientRequest(client, null);
 
       yield server.get(endpoint)
-                  .query({ authorizationToken: clientToken })
-                  .query({ redirectUrl: redirectUrls[0] })
+                  .query({ authToken: authToken })
+                  .expect(400);
+
+      authToken = yield signClientRequest(
+        client, { redirectUrl: redirectUrls[0] }
+      );
+
+      yield server.get(endpoint)
+                  .query({ authToken: authToken })
                   .expect(302);
     });
 
@@ -172,14 +179,15 @@ describe('Authentication API', () => {
         }
       );
 
-      const clientToken = yield loginAsClient(server, client);
+      const authToken = yield signClientRequest(client, {
+        redirectUrl: redirectUrls[1],
+        failureUrl: failureRedirectUrls[1]
+      });
 
       // Supertest's agent keeps the cookies
       const agent = supertest.agent(app);
       let res = yield agent.get(endpoint)
-                           .query({ authorizationToken: clientToken })
-                           .query({ redirectUrl: redirectUrls[1] })
-                           .query({ failureUrl: failureRedirectUrls[1] })
+                           .query({ authToken: authToken })
                            .expect(302)
                            .expect('location', /facebook\.com/)
                            .expect('set-cookie', /^connect\.sid\.auth=/);
