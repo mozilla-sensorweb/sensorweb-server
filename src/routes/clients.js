@@ -8,7 +8,7 @@
 
 import express from 'express';
 
-import db      from '../models/db';
+import db from '../models/db';
 import {
   ApiError,
   BAD_REQUEST,
@@ -17,6 +17,7 @@ import {
   ERRNO_FORBIDDEN,
   ERRNO_INTERNAL_ERROR,
   ERRNO_INVALID_API_CLIENT_NAME,
+  ERRNO_INVALID_API_CLIENT_PERMISSION,
   ERRNO_INVALID_API_CLIENT_REDIRECT_URL,
   INTERNAL_ERROR,
   modelErrors,
@@ -50,6 +51,15 @@ router.post('/', (req, res) => {
        .isArrayOfUrls({ require_valid_protocol: true });
   }
 
+  const permissions = req.body.permissions;
+  if (permissions) {
+    if (!Array.isArray(permissions)) {
+      req.body.permissions = [permissions];
+    }
+    req.checkBody('permissions', 'invalid "permissions"')
+       .isArrayOfPermissions();
+  }
+
   const error = req.validationErrors()[0];
   if (error) {
     let errno;
@@ -61,6 +71,9 @@ router.post('/', (req, res) => {
       case 'name':
         errno = ERRNO_INVALID_API_CLIENT_NAME;
         break;
+      case 'permissions':
+        errno = ERRNO_INVALID_API_CLIENT_PERMISSION;
+        break;
       default:
         errno = ERRNO_BAD_REQUEST;
     }
@@ -68,25 +81,48 @@ router.post('/', (req, res) => {
   }
 
   db().then(models => {
-    models.Clients.create(req.body).then(client => {
-      res.status(201).send(client);
-    }).catch(error => {
-      if (error.name && error.name === modelErrors[RECORD_ALREADY_EXISTS]) {
-        return ApiError(res, 403, ERRNO_FORBIDDEN, FORBIDDEN);
-      }
-      ApiError(res, 500, ERRNO_INTERNAL_ERROR, INTERNAL_ERROR);
+    return models.sequelize.transaction(transaction => {
+      return models.Clients.create(req.body, { transaction }).then(client => {
+        if (!req.body.permissions) {
+          return client;
+        }
+        return client.addPermissions(req.body.permissions, {
+          transaction
+        }).then(() => client);
+      });
     });
+  }).then(client => {
+    res.status(201).send(client);
+  }).catch(error => {
+    if (error.name && error.name === modelErrors[RECORD_ALREADY_EXISTS]) {
+      return ApiError(res, 403, ERRNO_FORBIDDEN, FORBIDDEN);
+    }
+    ApiError(res, 500, ERRNO_INTERNAL_ERROR, INTERNAL_ERROR);
   });
 });
+
+const normalizeClient = client => {
+  if (client.Permissions) {
+    client.dataValues.permissions = client.Permissions.map(
+      permission => permission.name
+    );
+    delete client.dataValues.Permissions;
+  }
+  return client;
+};
 
 // Get the list of registered API clients.
 router.get('/', (req, res) => {
   db().then(models => {
     models.Clients.findAll({
       attributes: ['key', 'name', 'authRedirectUrls',
-                   'authFailureRedirectUrls']
+                   'authFailureRedirectUrls'],
+      include: [{
+        model: models.Permissions,
+        attributes: ['name'],
+      }],
     }).then(clients => {
-      res.status(200).send(clients);
+      res.status(200).send(clients.map(normalizeClient));
     }).catch(error => {
       ApiError(res, 500, ERRNO_INTERNAL_ERROR, INTERNAL_ERROR);
     });

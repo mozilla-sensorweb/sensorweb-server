@@ -26,6 +26,11 @@ app.use(expressValidator({
       const validator = expressValidator.validator;
       return Array.isArray(value) &&
              value.every(item => validator.isURL(item, options));
+    },
+    isArrayOfPermissions: (value) => {
+      const permissions = config.get('permissions');
+      return Array.isArray(value) &&
+             value.every(item => permissions.indexOf(item) !== -1);
     }
   }
 }));

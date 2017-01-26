@@ -10,6 +10,7 @@ import {
   errnos,
   ERRNO_FORBIDDEN,
   ERRNO_INVALID_API_CLIENT_NAME,
+  ERRNO_INVALID_API_CLIENT_PERMISSION,
   ERRNO_INVALID_API_CLIENT_REDIRECT_URL,
   ERRNO_UNAUTHORIZED,
   errors,
@@ -34,7 +35,44 @@ describe('Clients API', () => {
           });
   });
 
+  beforeEach(function*() {
+    const { Clients } = yield db();
+    yield Clients.destroy({ where: {} });
+  });
+
   describe('POST ' + endpointPrefix + '/clients', () => {
+    const postAndCheckSuccess = (done, body) => {
+      server.post(endpointPrefix + '/clients')
+            .set('Authorization', 'Bearer ' + token)
+            .send(body)
+            .expect('Content-type', /json/)
+            .end((err, res) => {
+              should.not.exist(err);
+              res.status.should.be.equal(201);
+              res.body.key.should.be.instanceof(String)
+                 .and.have.lengthOf(16);
+              res.body.secret.should.be.instanceof(String)
+                 .and.have.lengthOf(128);
+              done();
+            });
+    };
+
+    const postAndCheckError = (done, body, auth, error) => {
+      server.post(endpointPrefix + '/clients')
+            .set('Authorization', auth ? 'Bearer ' + token : '')
+            .send(body)
+            .expect('Content-type', /json/)
+            .expect(error.code)
+            .end((err, res) => {
+              res.status.should.be.equal(error.code);
+              res.body.code.should.be.equal(error.code);
+              res.body.errno.should.be.equal(
+                errnos[error.errno]);
+              res.body.error.should.be.equal(errors[error.error]);
+              done();
+            });
+    };
+
     it('should respond 401 Unauthorized if there is no auth header', done => {
       server.post(endpointPrefix + '/clients')
             .expect('Content-type', /json/)
@@ -48,116 +86,114 @@ describe('Clients API', () => {
             });
     });
 
-    it('should respond 400 BadRequest if name param is missing', done => {
-      server.post(endpointPrefix + '/clients')
-            .set('Authorization', 'Bearer ' + token)
-            .expect('Content-type', /json/)
-            .expect(400)
-            .end((err, res) => {
-              res.status.should.be.equal(400);
-              res.body.code.should.be.equal(400);
-              res.body.errno.should.be.equal(errnos[ERRNO_INVALID_API_CLIENT_NAME]);
-              res.body.error.should.be.equal(errors[BAD_REQUEST]);
-              done();
-            });
-    });
-
-    it('should respond 400 BadRequest if name param is empty', done => {
-      server.post(endpointPrefix + '/clients')
-            .set('Authorization', 'Bearer ' + token)
-            .send({ name: '' })
-            .expect('Content-type', /json/)
-            .expect(400)
-            .end((err, res) => {
-              res.status.should.be.equal(400);
-              res.body.code.should.be.equal(400);
-              res.body.errno.should.be.equal(errnos[ERRNO_INVALID_API_CLIENT_NAME]);
-              res.body.error.should.be.equal(errors[BAD_REQUEST]);
-              done();
-            });
-    });
-
     [{
+      reason: 'there is no auth header',
+      auth: false,
+      code: 401,
+      error: UNAUTHORIZED,
+      errno: ERRNO_UNAUTHORIZED
+    }, {
+      reason: 'name param is missing',
+      body: {},
+      auth: true,
+      code: 400,
+      error: BAD_REQUEST,
+      errno: ERRNO_INVALID_API_CLIENT_NAME
+    }, {
+      reason: 'name param is empty',
+      body: { name: '' },
+      auth: true,
+      code: 400,
+      error: BAD_REQUEST,
+      errno: ERRNO_INVALID_API_CLIENT_NAME
+    }, {
       reason: 'authRedirectUrls param is not an array of URLs',
-      body: { name: 'clientName', authRedirectUrls: 'notAnArrayOfUrls' }
+      body: { name: 'clientName', authRedirectUrls: 'notAnArrayOfUrls' },
+      auth: true,
+      code: 400,
+      error: BAD_REQUEST,
+      errno: ERRNO_INVALID_API_CLIENT_REDIRECT_URL
     }, {
       reason: 'authRedirectUrls param is not an array of URLs',
       body: { name: 'clientName',
               authRedirectUrls: ['http://something.com'],
-              authFailureRedirectUrls: 'notAnArrayOfUrls' }
+              authFailureRedirectUrls: 'notAnArrayOfUrls' },
+      auth: true,
+      code: 400,
+      error: BAD_REQUEST,
+      errno: ERRNO_INVALID_API_CLIENT_REDIRECT_URL
     }, {
       reason: 'authFailureRedirectUrls is present but authRedirectUrls is not',
       body: { name: 'clientName',
-              authFailureRedirectUrls: ['http://something.com'] }
+              authFailureRedirectUrls: ['http://something.com'] },
+      auth: true,
+      code: 400,
+      error: BAD_REQUEST,
+      errno: ERRNO_INVALID_API_CLIENT_REDIRECT_URL
+    }, {
+      reason: 'permissions list has unknown permission',
+      body: { name: 'clientName',
+              permissions: ['banana'] },
+      auth: true,
+      code: 400,
+      error: BAD_REQUEST,
+      errno: ERRNO_INVALID_API_CLIENT_PERMISSION
     }].forEach(test => {
-      it('should respond 400 BadRequest if ' + test.reason, done => {
-        server.post(endpointPrefix + '/clients')
-              .set('Authorization', 'Bearer ' + token)
-              .send(test.body)
-              .expect('Content-type', /json/)
-              .expect(400)
-              .end((err, res) => {
-                res.status.should.be.equal(400);
-                res.body.code.should.be.equal(400);
-                res.body.errno.should.be.equal(
-                  errnos[ERRNO_INVALID_API_CLIENT_REDIRECT_URL]);
-                res.body.error.should.be.equal(errors[BAD_REQUEST]);
-                done();
-              });
+      it(`should respond ${test.code} if ${test.reason}`, done => {
+        postAndCheckError(done, test.body, test.auth, {
+          code: test.code,
+          error: test.error,
+          errno: test.errno
+        });
       });
     });
 
     [{
       reason: 'should respond 201 Created if request contains empty ' +
               'redirect URLs',
-      clientName: 'clientName',
       body: {
+        name: 'name',
         authRedirectUrls: [],
         authFailureRedirectUrls: []
       }
     }, {
       reason: 'should respond 201 Created if request has valid name ' +
               'and redirect URLs',
-      clientName: 'anotherClientName',
       body: {
+        name: 'name',
         authRedirectUrls: ['http://something.com'],
         authFailureRedirectUrls: ['http://something.com']
       }
+    }, {
+      reason: 'should respond 201 Created if request has valid name and ' +
+              'valid permissions array',
+      body: {
+        name: 'name',
+        permissions: config.get('permissions')
+      }
+    }, {
+      reason: 'should respond 201 Created if request has valid name and ' +
+              'valid permission string',
+      body: {
+        name: 'name',
+        permissions: config.get('permissions')[0]
+      }
     }].forEach(test => {
       it(test.reason, done => {
-        test.body.name = test.clientName;
-        server.post(endpointPrefix + '/clients')
-              .set('Authorization', 'Bearer ' + token)
-              .send(test.body)
-              .expect('Content-type', /json/)
-              .expect(201)
-              .end((err, res) => {
-                res.status.should.be.equal(201);
-                res.body.name.should.be.equal(test.clientName);
-                res.body.key.should.be.instanceof(String)
-                   .and.have.lengthOf(16);
-                res.body.secret.should.be.instanceof(String)
-                   .and.have.lengthOf(128);
-                done();
-              });
+        postAndCheckSuccess(done, test.body);
       });
     });
 
     it('should respond 403 Forbidden if API client is already registered',
        done => {
       const name = 'clientName';
-      server.post(endpointPrefix + '/clients')
-            .set('Authorization', 'Bearer ' + token)
-            .send({ name: 'clientName' })
-            .expect('Content-type', /json/)
-            .expect(403)
-            .end((err, res) => {
-              res.status.should.be.equal(403);
-              res.body.code.should.be.equal(403);
-              res.body.errno.should.be.equal(errnos[ERRNO_FORBIDDEN]);
-              res.body.error.should.be.equal(errors[FORBIDDEN]);
-              done();
-            });
+      postAndCheckSuccess(() => {
+        postAndCheckError(done, { name }, true /* auth */, {
+          code: 403,
+          error: FORBIDDEN,
+          errno: ERRNO_FORBIDDEN
+        });
+      }, { name });
     });
   });
 
@@ -195,12 +231,14 @@ describe('Clients API', () => {
 
     it('should respond 200 OK with an array containing the registered client',
        done => {
+      const url = 'http://domain.org';
       new Promise(resolve => {
         server.post(endpointPrefix + '/clients')
               .set('Authorization', 'Bearer ' + token)
               .send({ name: 'clientName',
-                      authRedirectUrls: ['http://something.com'],
-                      authFailureRedirectUrls: ['http://something.com'] })
+                      authRedirectUrls: [url],
+                      authFailureRedirectUrls: [url],
+                      permissions: config.get('permissions') })
               .expect('Content-type', /json/)
               .expect(201)
               .end(resolve);
@@ -215,11 +253,12 @@ describe('Clients API', () => {
                 res.body.forEach(client => {
                   client.should.have.properties('name');
                   client.should.have.properties('key');
-                  client['authRedirectUrls'].should.be.instanceof(Array)
-                        .and.have.lengthOf(1);
-                  client['authFailureRedirectUrls'].should.be.instanceof(Array)
-                        .and.have.lengthOf(1);
-                  client.should.not.have.properties('secret');
+                  client['authRedirectUrls'].should.be.deepEqual([url]);
+                  client['authFailureRedirectUrls'].should.be.deepEqual([url]);
+                  client['permissions'].should.be.deepEqual(
+                    config.get('permissions')
+                  );
+
                 });
                 done();
               });

@@ -22,8 +22,8 @@ const password = value => {
 
 convict.addFormat({
   name: 'dbport',
-  validate: (val) => (val === null || val >= 0 && val <= 65535),
-  coerce: (val) => (val === null ? null : parseInt(val))
+  validate: val => (val === null || val >= 0 && val <= 65535),
+  coerce: val => (val === null ? null : parseInt(val))
 });
 
 convict.addFormat({
@@ -35,6 +35,14 @@ convict.addFormat({
   }
 });
 
+convict.addFormat({
+  name: 'arrayOfStrings',
+  validate: val => (
+    Array.isArray(val) && val.every(item => typeof item === 'string')
+  )
+});
+
+// Note: Alphabetically ordered, please.
 const conf = convict({
   adminPass: {
     doc: 'The password for the admin user. Follow OWASP guidelines for passwords',
@@ -46,17 +54,15 @@ const conf = convict({
     format: avoidDefault,
     default: defaultValue
   },
-  env: {
-    doc: 'The application environment.',
-    format: ['dev', 'test', 'stage', 'prod', 'circleci'],
-    default: 'dev',
-    env: 'NODE_ENV'
-  },
-  port: {
-    doc: 'The port to bind.',
-    format: 'port',
-    default: 8080,
-    env: 'PORT'
+  behindProxy: {
+    doc: `Set this to true if the server runs behind a reverse proxy. This is
+          especially important if the proxy implements HTTPS with
+          userAuth.cookieSecure. Also with this Express will trust the
+          X-Forwarded-For header. Set to 1 or auto if you're behind a proxy.`,
+    default: false,
+    // Format is "*" because otherwise convict infers it's a boolean from the
+    // default value and will refuse 1 or "auto".
+    format: '*',
   },
   db: {
     host: {
@@ -80,6 +86,24 @@ const conf = convict({
       doc: 'Database password',
       default: '',
     }
+  },
+  env: {
+    doc: 'The application environment.',
+    format: ['dev', 'test', 'stage', 'prod', 'circleci'],
+    default: 'dev',
+    env: 'NODE_ENV'
+  },
+  // XXX Define list of scopes Issue #53
+  permissions: {
+    doc: 'List of allowed client permissions',
+    format: 'arrayOfStrings',
+    default: ['admin']
+  },
+  port: {
+    doc: 'The port to bind.',
+    format: 'port',
+    default: 8080,
+    env: 'PORT'
   },
   publicHost: {
     doc: 'Public host for this server, especially for auth callback'
@@ -105,16 +129,6 @@ const conf = convict({
       }
     }
   },
-  behindProxy: {
-    doc: `Set this to true if the server runs behind a reverse proxy. This is
-          especially important if the proxy implements HTTPS with
-          userAuth.cookieSecure. Also with this Express will trust the
-          X-Forwarded-For header. Set to 1 or auto if you're behind a proxy.`,
-    default: false,
-    // Format is "*" because otherwise convict infers it's a boolean from the
-    // default value and will refuse 1 or "auto".
-    format: '*',
-  },
   userAuth: {
     cookieSecure: {
       doc: `This configures whether the cookie should be set and sent for
@@ -139,7 +153,8 @@ const conf = convict({
     },
   },
   version: {
-    doc: 'API version. We follow SensorThing\'s versioning format as described at http://docs.opengeospatial.org/is/15-078r6/15-078r6.html#34',
+    doc: `API version. We follow SensorThing\'s versioning format as described
+          at http://docs.opengeospatial.org/is/15-078r6/15-078r6.html#34`,
     format: value => {
       const pattern = /^v(\d+\.)?(\d)$/g;
       const match = pattern.exec(value);

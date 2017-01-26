@@ -42,6 +42,13 @@ module.exports = (sequelize, DataTypes) => {
         this.setDataValue('authFailureRedirectUrls', value);
       }
     }
+  }, {
+    classMethods: {
+      associate: db => {
+        Client.belongsToMany(db.Permissions, { through: 'ClientPermissions' });
+      }
+    }
   });
+
   return Client;
 }

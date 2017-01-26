@@ -186,6 +186,7 @@ ___Parameters___
 * name - API client name.
 * authRedirectUrls (optional) - API client user authentication redirection URLs.
 * authFailureRedirectUrls (optional) - API client user authentication failure redirection URLs.
+* permissions (optional) - List of permissions the client is allowed to request.
 
 ```ssh
 POST /api/clients HTTP/1.1
@@ -194,7 +195,8 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImFkbWluIiwic
 {
     "name": "SensorWebClient",
     "authRedirectUrls": ["https://domain.org/auth/success"],
-    "authFailureRedirectUrls": ["https://domain.org/auth/error"]
+    "authFailureRedirectUrls": ["https://domain.org/auth/error"],
+    "permissions": ["sensorthings-api"]
 }
 ```
 
@@ -233,7 +235,10 @@ Content-Type: application/json; charset=utf-8
 [
     {
         "name": "SensorWebClient",
-        "key": "766a06dab7358b6aec17891df1fe8555"
+        "key": "766a06dab7358b6aec17891df1fe8555",
+        "authRedirectUrls": ["https://domain.org/auth/success"],
+        "authFailureRedirectUrls": ["https://domain.org/auth/error"],
+        "permissions": ["sensorthings-api"]
     }
 ]
 ```

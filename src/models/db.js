@@ -4,10 +4,11 @@
 
 'use strict';
 
-import config    from '../config';
-import fs        from 'fs';
-import path      from 'path';
+import config from '../config';
+import fs from 'fs';
+import path from 'path';
 import Sequelize from 'sequelize';
+import sequelizeFixtures from 'sequelize-fixtures';
 
 const IDLE           = 0
 const INITIALIZING   = 1;
@@ -77,6 +78,13 @@ export default function() {
       deferreds.pop().resolve(db);
     }
     state = READY;
+
+    // Load default permissions.
+    const permissions = config.get('permissions').map(permission => {
+      return { model: 'Permissions', data: { name: permission }};
+    });
+    return sequelizeFixtures.loadFixtures(permissions, db);
+  }).then(() => {
     return db;
   }).catch(e => {
     console.error(e);

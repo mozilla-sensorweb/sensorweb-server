@@ -2,6 +2,7 @@
 const errnos = {
   ERRNO_INVALID_API_CLIENT_NAME         : 100,
   ERRNO_INVALID_API_CLIENT_REDIRECT_URL : 101,
+  ERRNO_INVALID_API_CLIENT_PERMISSION   : 102,
   ERRNO_BAD_REQUEST                     : 400,
   ERRNO_UNAUTHORIZED                    : 401,
   ERRNO_FORBIDDEN                       : 403,
