@@ -3,6 +3,8 @@ import fs      from 'fs';
 import owasp   from 'owasp-password-strength-test';
 import path    from 'path';
 
+import { validator } from 'express-validator';
+
 const defaultValue = 'default';
 
 const avoidDefault = value => {
@@ -20,19 +22,23 @@ const password = value => {
   }
 };
 
+const hex = size => {
+  return val => {
+    const error = new Error('Admin client key must be an 8 chars hex string');
+    if (size && val.length < size) {
+      throw error;
+    }
+
+    if (!validator.isHexadecimal(val)) {
+      throw error;
+    }
+  };
+};
+
 convict.addFormat({
   name: 'dbport',
   validate: val => (val === null || val >= 0 && val <= 65535),
   coerce: val => (val === null ? null : parseInt(val))
-});
-
-convict.addFormat({
-  name: 'hex',
-  validate: function(val) {
-    if (/[^a-fA-F0-9]/.test(val)) {
-      throw new Error('must be a hex key');
-    }
-  }
 });
 
 convict.addFormat({
@@ -44,15 +50,20 @@ convict.addFormat({
 
 // Note: Alphabetically ordered, please.
 const conf = convict({
+  adminClientKey: {
+    doc: 'Admin client key',
+    format: hex(16),
+    default: ''
+  },
+  adminClientSecret: {
+    doc: 'Admin client secret',
+    format: hex(32),
+    default: ''
+  },
   adminPass: {
     doc: 'The password for the admin user. Follow OWASP guidelines for passwords',
     format: password,
     default: 'invalid'
-  },
-  adminSessionSecret: {
-    doc: 'Secret to sign admin session tokens',
-    format: avoidDefault,
-    default: defaultValue
   },
   behindProxy: {
     doc: `Set this to true if the server runs behind a reverse proxy. This is
@@ -129,6 +140,11 @@ const conf = convict({
       }
     }
   },
+  sessionSecret: {
+    doc: 'Secret to sign session tokens',
+    format: hex(32),
+    default: defaultValue
+  },
   userAuth: {
     cookieSecure: {
       doc: `This configures whether the cookie should be set and sent for
@@ -148,7 +164,7 @@ const conf = convict({
       },
       clientSecret: {
         doc: 'Facebook clientSecret',
-        format: 'hex'
+        format: hex()
       },
     },
   },

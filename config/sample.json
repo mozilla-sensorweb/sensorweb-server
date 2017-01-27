@@ -1,9 +1,7 @@
 {
+  "adminClientKey": "default",
+  "adminClientSecret": "default",
   "adminPass": "default",
-  "adminSessionSecret": "default",
-  "env": "dev",
-  "port": 8080,
-  "publicHost": "http://localhost:8080",
   "db": {
     "host": "localhost",
     "port": 5432,
@@ -11,19 +9,23 @@
     "user": "postgres",
     "password": "default"
   },
-  "userAuth": {
-    "sessionSecret": "default",
-    "facebook": {
-      "clientID": "",
-      "clientSecret": ""
-    }
-  },
+  "env": "dev",
+  "port": 8080,
+  "publicHost": "http://localhost:8080",
   "sensorthings": {
     "server": "https://pg-api.sensorup.com",
     "path": "/st-playground/proxy/v1.0",
     "credentials": {
       "header": "St-P-Access-Token",
       "value": "a8654152-74c0-41dd-a954-bcab50ff99d4"
+    }
+  },
+  "sessionSecret": "default",
+  "userAuth": {
+    "sessionSecret": "default",
+    "facebook": {
+      "clientID": "",
+      "clientSecret": ""
     }
   },
   "version": "v1.0"

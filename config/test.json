@@ -1,9 +1,7 @@
 {
+  "adminClientKey": "3bfff46e04c7ed52",
+  "adminClientSecret": "2e221f61493297318678218c9ade9b4a",
   "adminPass": "1.TestPassword.1",
-  "adminSessionSecret": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9",
-  "env": "test",
-  "port": 8080,
-  "publicHost": "http://localhost:8080",
   "db": {
     "host": "localhost",
     "port": 5432,
@@ -11,6 +9,11 @@
     "user": "postgres",
     "password": "default"
   },
+  "env": "test",
+  "port": 8080,
+  "permissions": ["admin", "dummy"],
+  "publicHost": "http://localhost:8080",
+  "sessionSecret": "bf5f0df1abfd6c4e10327a0ad965fe54",
   "userAuth": {
     "sessionSecret": "v3erY secr€t",
     "facebook": {

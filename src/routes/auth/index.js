@@ -1,18 +1,21 @@
-import express               from 'express';
-import session               from 'express-session';
+import express  from 'express';
+import session  from 'express-session';
 import SequelizeStoreFactory from 'connect-session-sequelize';
 
-import basic         from './basic';
-import facebook      from './facebook';
+import basic  from './basic';
+import facebook from './facebook';
 
-import config        from '../../config';
+import config from '../../config';
 import { sequelize } from '../../models/db';
+
+import auth from '../../middlewares/auth'
+import { SIGNED_BY_CLIENT } from '../../middlewares/auth';
 
 const router = express.Router();
 
 // We don't need the session handling for Basic authentication, that's why we
 // configure it here before inserting the session middleware.
-router.use('/basic', basic);
+router.use('/basic', auth([], SIGNED_BY_CLIENT), basic);
 
 // initalize sequelize with session store
 const SequelizeStore = SequelizeStoreFactory(session.Store);

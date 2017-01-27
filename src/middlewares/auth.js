@@ -1,5 +1,20 @@
 /**
- * Route middleware to verify session tokens.
+ * This middleware handles endpoint authentication. Endpoint authentication
+ * is done through a signed JWT expected as value of the 'Authorization' header
+ * or the 'authToken' query parameter. This JWT can be signed by two
+ * different authorities:
+ *
+ * 1. A registered API client.
+ * 2. The API server.
+ *
+ * Each of these authorities will have a different secret.
+ *
+ * Clients may obtain authorization tokens:
+ *
+ * 1. On their behalf.
+ * 2. On behalf of an user.
+ * 3. On behalf of a device.
+ *
  */
 
 import jwt    from 'jsonwebtoken';
@@ -16,14 +31,21 @@ function unauthorized(res) {
   ApiError(res, 401, ERRNO_UNAUTHORIZED, UNAUTHORIZED);
 }
 
-export default (scopes) => {
-  // For now we only allow 'admin' scope.
-  const validScopes = ['admin', 'client', 'user'].filter(
-    scope => scopes.includes(scope)
-  );
+export const SIGNED_BY_CLIENT = 'clientSigned';
+export const SIGNED_BY_SERVER = 'serverSigned';
 
-  if (!validScopes.length) {
-    throw new Error(`No valid scope found in "${scopes}"`);
+export default (endpointScopes, signedBy) => {
+  // Check that we specified who we expect to be the signer of the token
+  // being verified.
+  if (![SIGNED_BY_CLIENT, SIGNED_BY_SERVER].includes(signedBy)) {
+    throw new Error('Invalid token signature author');
+  }
+
+  // Check that the required scope is a registered permission.
+  const permissions = config.get('permissions');
+  if (endpointScopes &&
+      !endpointScopes.every(scope => permissions.includes(scope))) {
+    throw new Error(`Invalid permission found in "${endpointScopes}"`);
   }
 
   return (req, res, next) => {
@@ -44,53 +66,72 @@ export default (scopes) => {
       return unauthorized(res);
     }
 
-    // Because we expect to get tokens signed with different secrets, we first
-    // need to get the owner of the token so we can get the appropriate secret.
+    // *All* auth tokens must have at least a clientKey in its payload.
+    // If this is a client signed token, we'll use the client identifier
+    // to obtain the client's secret to verify the token's signature.
     const decoded = jwt.decode(token);
-
-    if (!decoded || !decoded.id || !decoded.scope) {
+    if (!decoded || !decoded.clientKey || !decoded.scopes) {
       return unauthorized(res);
     }
 
-    if (!validScopes.includes(decoded.scope)) {
-      console.log('Error while authenticating, invalid scope', decoded);
-      return unauthorized(res);
-    }
+    db().then(({ Clients, Users, Permissions }) => {
+      if (!decoded.userId) {
+        return Promise.resolve({ Clients, Permissions });
+      }
 
-    let secretPromise;
-    switch(decoded.scope) {
-      case 'client':
-        secretPromise = db().then(({ Clients }) =>
-          Clients.findById(decoded.id, { attributes: ['secret'] })
-        ).then(client => client.secret);
-        break;
-      case 'user':
-      case 'admin':
-        secretPromise = Promise.resolve(config.get('adminSessionSecret'));
-        break;
-      default:
-        // should not happen because we check this earlier
-        next(new Error(`Unknown scope ${decoded.scope}`));
-    }
+      // If this token was obtained on behalf of an user, we need to check
+      // that the user is still valid.
+      return Users.findById(decoded.userId).then(user => {
+        if (!user) {
+          throw new Error();
+        }
+        req.userId = user.id;
+        return { Clients, Permissions };
+      });
+    }).then(({ Clients, Permissions }) => {
+      // Every token belongs to a client and each client has its own
+      // identifier. We need to verify that the client owning this token is
+      // still a valid client.
+      return Clients.findById(decoded.clientKey, { include: Permissions});
+    }).then(client => {
+      // The client must exist.
+      if (!client) {
+        return unauthorized(res);
+      }
 
-    // Verify JWT signature.
-    secretPromise.then(secret => {
-      jwt.verify(token, secret, (error) => {
+      decoded.scopes = Array.isArray(decoded.scopes) ? decoded.scopes
+                                                     : [decoded.scopes];
+
+      const permissions = client.Permissions.map(permission => {
+        return permission.name;
+      });
+
+      // Check that the token has a scope allowed for this client and
+      // that the required endpoint scopes are included in the token.
+      if (!decoded.scopes.every(scope => permissions.includes(scope)) ||
+          !endpointScopes.every(scope => decoded.scopes.includes(scope))) {
+        return unauthorized(res);
+      }
+
+      // We expect to get tokens signed with different secrets.
+      const secret = signedBy === SIGNED_BY_CLIENT ?
+                     client.secret :
+                     config.get('sessionSecret');
+
+      // Verify JWT signature.
+      jwt.verify(token, secret, error => {
         if (error) {
-          console.log('Error while verifying the token', error);
           return unauthorized(res);
         }
 
-        // XXX s/id/clientId/g
-        req.clientId = decoded.id;
+        req.scopes = decoded.scopes;
+        req.client = client;
         req.authPayload = decoded;
 
-        // XXX Get rid of this. Kept only to keep user tokens working. Issue #68
-        req[decoded.scope] = decoded.id;
-        req.authScope = decoded.scope;
-
-        return next();
+        next();
       });
-    }).catch(err => next(err || new Error('Unexpected error')));
+    }).catch(() => {
+      unauthorized(res);
+    });
   };
 };

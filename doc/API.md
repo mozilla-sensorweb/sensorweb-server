@@ -10,12 +10,12 @@ This document provides protocol-level details of the SensorWeb API.
 
 All requests will be to URLs of the form:
 
-    https://<host-url>/api/v1/<api-endpoint>
+    https://<host-url>/<api-version>/<api-endpoint>
 
 Note that:
 
 * All API access must be over a properly-validated HTTPS connection.
-* The URL embeds a version identifier "v1"; future revisions of this API may 
+* The URL embeds a version identifier "v1.0"; future revisions of this API may
 introduce new version numbers.
 
 ## Request Format
@@ -39,7 +39,7 @@ Use the JWT with this header:
 For example:
 
 ```curl
-curl 'http://localhost:3000/api/v1/clients' \
+curl 'http://localhost:3000/v1.0/clients' \
 -H 'Accept: application/json' \
 -H 'Authorization: Bearer eyJ0eXAiOiJKV1QiLCJraWQiOm51bGwsImFsZyI6IkhTMjU2In0.eyJpZCI6MiwibmFtZSI6ImFkbWluIn0.JNtvokupDl2hdqB+vER15y89qigPc4FviZfJOSR1Vso'
 ```
@@ -86,8 +86,8 @@ SHOULD NOT be repeated.
 # API Endpoints
 
 * Login
-  * [POST /auth/basic](#post-authbasic)
-  * [GET /auth/facebook](#get-authfacebook)
+  * [GET /auth/basic](#post-authbasic) :lock: (client signed token required)
+  * [GET /auth/facebook](#get-authfacebook) :lock: (client signed token required)
 * API clients management
   * [POST /clients](#post-clients) :lock: (admin scope required)
   * [GET /clients](#get-clients) :lock: (admin scope required)
@@ -95,24 +95,31 @@ SHOULD NOT be repeated.
 * Permissions
   * [GET /permissions](#get-permissions) :lock: (admin scope required)
 
-## POST /auth/basic
-Authenticates a user using Basic authentication. So far only an admin user is 
+## GET /auth/basic
+Authenticates a user using username and password. So far only an admin user is
 allowed.
 ### Request
-Requests must include a [basic authorization header]
-(https://en.wikipedia.org/wiki/Basic_access_authentication#Client_side) 
-with `username:password` encoded in Base64.
+Requests must include a JWT signed with a valid client secret as the
+`authToken` query parameter.
+
 ```ssh
-POST /api/auth/basic HTTP/1.1
-Authorization: Basic YWRtaW46QXZhbGlkUGFzc3dvcmQuMA==
+GET /v1.0/auth/basic?authToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbn
+RJZCI6IjhlYWYxMjQ1MTEzNGIyNGUiLCJ1c2VybmFtZSI6ImFkbWluIiwicGFzc3dvcmQiOiIxLkxv
+bmdhZG1pbnBhc3MuMSIsInNjb3BlcyI6ImFkbWluIn0.foaQeXQGt5_8wFmW5mH9wdQLE3VKHwH9oD
+clmUroWRk HTTP/1.1
 ```
+
+The payload of the signed JWT must include the following information:
+* `clientKey`: client identifier, aka his key.
+* `scopes`: the list of permissions the client is asking for for this token.
+
 ### Response
-Successful requests will produce a "201 Created" response with a session token 
+Successful requests will produce a 200 response with a session token
 in the form of a [JWT](https://jwt.io/) with the following data:
 ```json
 {
-  "id": "admin",
-  "scope": "admin"
+  "clientKey": "8eaf12451134b24e",
+  "scopes": ["admin"]
 }
 ```
 
@@ -124,9 +131,9 @@ Content-Length: 156
 Content-Type: application/json; charset=utf-8
 Date: Fri, 23 Sep 2016 16:22:39 GMT
 {
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImFk
-            bWluIiwic2NvcGUiOiJhZG1pbiIsImlhdCI6MTQ3NDY0Nzc1O
-            X0.R1vQOLVg8A-6i5QaZQVOGAzImiPvgAdkWiODYhYiNn4"
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRJZCI6IjhlYWYxMjQ1MTE
+            zNGIyNGUiLCJzY29wZXMiOlsiYWRtaW4iXSwiaWF0IjoxNDc0NjQ3NzU5fQ.ZxnRCbuw
+            yCypJMnAHHhpwSL_-y19Q4DSioA1cnB9JyY"
 }
 ```
 
@@ -137,7 +144,7 @@ Requests must include a JWT signed with a valid client secret as the
 `authToken` query parameter.
 
 ```ssh
-POST /api/auth/facebook?authToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjb
+GET /v1.0/auth/facebook?authToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjb
 GllbnRJZCI6IjEyMzQ1Njc4OTAiLCJzY29wZXMiOlsidXNlci1mYXZvcml0ZXMiXSwiYXV0aFJlZ
 GlyZWN0VXJscyI6WyJodHRwczovL2RvbWFpbi5vcmcvYXV0aC9zdWNjZXNzIl0sImF1dGhGYWlsd
 XJlVXJscyI6WyJodHRwczovL2RvbWFpbi5vcmcvYXV0aC9lcnJvciJdfQ.e7rYEZsQNLG0aTjDRH
@@ -145,8 +152,8 @@ sQ2xembu3fyVe-B9bm8mFprwQ HTTP/1.1
 ```
 
 The payload of the signed JWT must include the following information:
-* `id`: client identifier, aka his key.
-* `scope`: just `client` for now.
+* `clientKey`: client identifier, aka his key.
+* `scopes`: the list of permissions the client is asking for for this token.
 * `redirectUrl`: the URL you would like to be redirected after a
     successful login. This URL needs to be associated with your client
     information first. It will gets the user's JWT as a query parameter `token`.
@@ -172,12 +179,8 @@ with the following data:
 
 ```json
 {
-  "id": {
-    "opaqueId": "facebook_id",
-    "provider": "facebook",
-    "clientKey": "02e9c791d7"
-  },
-  "scope": "user"
+  "clientKey": "02e9c791d7",
+  "scopes": ["sensorthings"]
 }
 ```
 
@@ -191,7 +194,7 @@ ___Parameters___
 * permissions (optional) - List of permissions the client is allowed to request.
 
 ```ssh
-POST /api/clients HTTP/1.1
+POST /v1.0/clients HTTP/1.1
 Content-Type: application/json
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImFkbWluIiwic2NvcGUiOiJhZG1pbiIsImlhdCI6MTQ3NDY0Nzc1OX0.R1vQOLVg8A-6i5QaZQVOGAzImiPvgAdkWiODYhYiNn4
 {
@@ -222,7 +225,7 @@ Get the list of registered API clients.
 
 ### Request
 ```ssh
-GET /api/clients HTTP/1.1
+GET /v1.0/clients HTTP/1.1
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImFkbWluIiwic2NvcGUiOiJhZG1pbiIsImlhdCI6MTQ3NDY0Nzc1OX0.R1vQOLVg8A-6i5QaZQVOGAzImiPvgAdkWiODYhYiNn4
 ```
 
@@ -250,7 +253,7 @@ Deletes a registered API client given its identifier.
 
 ### Request
 ```ssh
-DELETE /api/clients/766a06dab7358b6aec17891df1fe8555 HTTP/1.1
+DELETE /v1.0/clients/766a06dab7358b6aec17891df1fe8555 HTTP/1.1
 Host: localhost:8080
 ```
 
@@ -262,7 +265,7 @@ Get the list of client permissions.
 
 ### Request
 ```ssh
-GET /api/permissions HTTP/1.1
+GET /v1.0/permissions HTTP/1.1
 Host: localhost:8080
 ```
 
