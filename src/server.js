@@ -1,19 +1,19 @@
-import bodyParser       from 'body-parser';
-import cors             from 'cors';
-import express          from 'express';
+import bodyParser from 'body-parser';
+import cors from 'cors';
+import express from 'express';
 import expressValidator from 'express-validator';
-import logger           from 'morgan-body';
-import path             from 'path';
+import logger from 'morgan-body';
+import path from 'path';
 
-import auth             from './middlewares/auth'
+import auth from './middlewares/auth'
 
-import config           from './config';
+import config from './config';
 
-import clients          from './routes/clients';
-import dockerflow       from './routes/dockerflow';
-import authRouter       from './routes/auth';
-
-import sensorthings     from './routes/sensorthings';
+import authRouter from './routes/auth';
+import clients from './routes/clients';
+import dockerflow from './routes/dockerflow';
+import permissions from './routes/permissions';
+import sensorthings from './routes/sensorthings';
 
 let app = express();
 
@@ -42,14 +42,14 @@ if (config.get('env') !== 'test' || process.env.FORCE_OUTPUT) {
 
 app.use(cors());
 
-app.use('/', dockerflow);
-
-app.use('/', sensorthings);
-
 const endpointPrefix = '/' + config.get('version');
 
-app.use(endpointPrefix + '/clients', auth(['admin']), clients);
+app.use('/', dockerflow);
+app.use('/', sensorthings);
+
 app.use(endpointPrefix + '/auth', authRouter);
+app.use(endpointPrefix + '/clients', auth(['admin']), clients);
+app.use(endpointPrefix + '/permissions', auth(['admin']), permissions);
 
 const port = config.get('port');
 app.listen(port, () => console.log(`Running on localhost:${port}`));

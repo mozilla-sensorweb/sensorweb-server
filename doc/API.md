@@ -92,6 +92,8 @@ SHOULD NOT be repeated.
   * [POST /clients](#post-clients) :lock: (admin scope required)
   * [GET /clients](#get-clients) :lock: (admin scope required)
   * [DELETE /clients/:key](#delete-clientskey) :lock: (admin scope required)
+* Permissions
+  * [GET /permissions](#get-permissions) :lock: (admin scope required)
 
 ## POST /auth/basic
 Authenticates a user using Basic authentication. So far only an admin user is 
@@ -254,3 +256,25 @@ Host: localhost:8080
 
 ### Response
 Successful requests will produce a "204 No Content" response.
+
+## GET /permissions
+Get the list of client permissions.
+
+### Request
+```ssh
+GET /api/permissions HTTP/1.1
+Host: localhost:8080
+```
+
+### Response
+Successful requests will produce a 200 response with an array of permissions.
+```ssh
+Access-Control-Allow-Origin: *
+Connection: keep-alive
+Content-Length: 52
+Content-Type: application/json; charset=utf-8
+{
+    "permissions": ["admin", "sensorthings-api"]
+}
+```
+
