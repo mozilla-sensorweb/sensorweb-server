@@ -6,7 +6,7 @@ import logger from 'morgan-body';
 import path from 'path';
 
 import auth from './middlewares/auth'
-
+import { SIGNED_BY_SERVER } from './middlewares/auth';
 import config from './config';
 
 import authRouter from './routes/auth';
@@ -48,8 +48,9 @@ app.use('/', dockerflow);
 app.use('/', sensorthings);
 
 app.use(endpointPrefix + '/auth', authRouter);
-app.use(endpointPrefix + '/clients', auth(['admin']), clients);
-app.use(endpointPrefix + '/permissions', auth(['admin']), permissions);
+app.use(endpointPrefix + '/clients', auth(['admin'], SIGNED_BY_SERVER), clients);
+app.use(endpointPrefix + '/permissions', auth(['admin'], SIGNED_BY_SERVER),
+        permissions);
 
 const port = config.get('port');
 app.listen(port, () => console.log(`Running on localhost:${port}`));

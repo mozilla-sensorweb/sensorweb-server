@@ -1,10 +1,11 @@
-import express      from 'express';
-import passport     from 'passport';
+import express from 'express';
+import passport from 'passport';
 import { Strategy } from 'passport-facebook';
 
-import config       from '../../config';
-import db           from '../../models/db';
-import auth         from '../../middlewares/auth';
+import config from '../../config';
+import db from '../../models/db';
+import auth from '../../middlewares/auth';
+import { SIGNED_BY_CLIENT } from '../../middlewares/auth';
 import finalizeAuth from './finalize_auth';
 import {
   ApiError,
@@ -45,33 +46,19 @@ passport.use(new Strategy(
   }
 ));
 
-function checkClientExists(req, res, next) {
-  db().then(({ Clients }) =>
-    Clients.findById(req.clientId, { attributes: { exclude: ['secret'] }})
-  ).then(client => {
-    if (client) {
-      req.client = client;
-      return next();
-    }
-
-    return ApiError(res, 403, ERRNO_FORBIDDEN, FORBIDDEN);
-  });
-}
-
 function checkHasValidSession(req, res, next) {
   if (!req.session.valid) {
     return ApiError(res, 403, ERRNO_FORBIDDEN, FORBIDDEN);
   }
 
-  return next();
+  next();
 }
 
 router.get('/',
-  auth(['client']),
-  checkClientExists,
+  auth([], SIGNED_BY_CLIENT),
   (req, res, next) => {
     const client = req.client;
-    const { redirectUrl, failureUrl } = req.authPayload;
+    const { redirectUrl, failureUrl, scopes } = req.authPayload;
 
     const authRedirectUrls = client.authRedirectUrls || [];
     const authFailureRedirectUrls = client.authFailureRedirectUrls || [];
@@ -88,6 +75,7 @@ router.get('/',
     req.session.redirectUrl = redirectUrl;
     req.session.failureUrl = failureUrl;
     req.session.clientKey = client.key;
+    req.session.scopes = scopes;
 
     return passport.authenticate(
       'facebook', { session: false }
@@ -116,8 +104,10 @@ router.get(
           return ApiError(res, 401, ERRNO_UNAUTHORIZED, UNAUTHORIZED);
         }
 
-        req.user = user;
-        return next();
+        req.userId = user;
+        req.client = { key: req.session.clientKey };
+        req.scopes = req.session.scopes;
+        next();
       }
     )(req, res, next);
   },

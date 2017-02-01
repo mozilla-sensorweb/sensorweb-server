@@ -3,13 +3,30 @@ import url      from 'url';
 
 import config   from '../../config';
 
-export default function finalizeAuth(req, res) {
-  const userData = req.user;
-  delete req.user;
-  req[userData.scope] = userData.id;
-  req.authScope = userData.scope;
+import {
+  ApiError,
+  ERRNO_UNAUTHORIZED,
+  UNAUTHORIZED
+} from '../../errors';
 
-  const token = jwt.sign(userData, config.get('adminSessionSecret'));
+export default function finalizeAuth(req, res) {
+  // XXX We will need these values for the multi-tenant and multi-user
+  //     middlewares, but for now, let's just remove them here.
+  //     Issues #75 and #76.
+  const userId = req.userId;
+  delete req.userId;
+  const clientKey = req.client.key;
+  delete req.client;
+  const scopes = req.scopes && Array.isArray(req.scopes) ?
+                req.scopes : [req.scopes];
+  delete req.scopes;
+
+  if (!clientKey || !scopes) {
+    return ApiError(res, 401, ERRNO_UNAUTHORIZED, UNAUTHORIZED);
+  }
+
+  const token = jwt.sign({ clientKey, userId, scopes},
+                         config.get('sessionSecret'));
 
   if (req.session && req.session.redirectUrl) {
     const redirectUrl = url.parse(req.session.redirectUrl, true);
@@ -19,5 +36,5 @@ export default function finalizeAuth(req, res) {
     return;
   }
 
-  res.status(201).json({ token });
+  res.status(200).json({ token });
 }

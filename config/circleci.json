@@ -1,8 +1,7 @@
 {
+  "adminClientKey": "8eaf12451134b24e",
+  "adminClientSecret": "faf0a67a00ab7b5477149b96d9c07e32",
   "adminPass": "1.TestPassword.1",
-  "adminSessionSecret": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9",
-  "env": "test",
-  "port": 8080,
   "db": {
     "host": "127.0.0.1",
     "port": 5432,
@@ -10,6 +9,9 @@
     "user": "ubuntu",
     "password": ""
   },
+  "env": "test",
+  "port": 8080,
+  "sessionSecret": "b7dde0ef7952697c2613f76c1b5e0503",
   "userAuth": {
     "sessionSecret": "v3erY secr€t",
     "facebook": {

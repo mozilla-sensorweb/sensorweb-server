@@ -17,10 +17,10 @@ module.exports = (sequelize, DataTypes) => {
       },
     },
     secret: {
-      type: DataTypes.STRING(128),
+      type: DataTypes.STRING(32),
       allowNull: false,
       defaultValue: () => {
-        return randomBytes(64).toString('hex');
+        return randomBytes(16).toString('hex');
       }
     },
     // Redirection URLs for user authentication flows.

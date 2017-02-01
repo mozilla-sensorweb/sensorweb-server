@@ -74,17 +74,27 @@ export default function() {
   db.Sequelize = Sequelize;
 
   return sequelize.sync().then(() => {
-    while (deferreds.length) {
-      deferreds.pop().resolve(db);
-    }
-    state = READY;
-
     // Load default permissions.
     const permissions = config.get('permissions').map(permission => {
       return { model: 'Permissions', data: { name: permission }};
     });
     return sequelizeFixtures.loadFixtures(permissions, db);
   }).then(() => {
+    // Load admin client.
+    const data = {
+      name: 'admin',
+      key: config.get('adminClientKey'),
+      secret: config.get('adminClientSecret'),
+      Permissions: [{ name: 'admin' }]
+    };
+    return sequelizeFixtures.loadFixtures([{ model: 'Clients', data }], db);
+  }).then(() => {
+    while (deferreds.length) {
+      deferreds.pop().resolve(db);
+    }
+
+    state = READY;
+
     return db;
   }).catch(e => {
     console.error(e);

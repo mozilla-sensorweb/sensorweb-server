@@ -19,12 +19,9 @@ const authMethods = {
     });
   },
 
-  AUTH_PROVIDER: (data) => {
+  AUTH_PROVIDER: data => {
     // We use this authentication method only for users.
-    return Promise.resolve({
-      id: data,
-      scope: 'user'
-    });
+    return Promise.resolve(data);
   },
 };
 
@@ -47,14 +44,24 @@ module.exports = (sequelize, DataTypes) => {
 
     return authMethods[method](data)
       .then(userData => {
-        if (userData.scope !== 'user') {
-          return userData;
+        if (userData.id === 'admin' && userData.scope === 'admin') {
+          return userData.id;
         }
 
-        return User.findOrCreate({
-          attributes: [],
-          where: userData.id, // this contains all user attributes
-        }).then(() => userData);
+        let promise;
+        if (userData.id) {
+          promise = User.findById(userData.id);
+        } else if (userData.opaqueId) {
+          promise = User.create(userData);
+        } else {
+          return Promise.reject();
+        }
+        return promise.then(user => {
+          if (!user) {
+            return Promise.reject();
+          }
+          return user.id;
+        });
       });
   };
 

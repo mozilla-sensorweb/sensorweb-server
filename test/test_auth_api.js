@@ -25,56 +25,59 @@ const endpointPrefix = '/' + config.get('version');
 const server = supertest(app);
 
 describe('Authentication API', () => {
-  // TODO Use Template Strings, promises and generators. (issue #59)
-  describe('POST ' + endpointPrefix + '/auth/basic', () => {
-    it('should respond 401 Unauthorized if there is no auth header', done => {
-      server.post(endpointPrefix + '/auth/basic')
-            .expect(401)
-            .end((err, res) => {
-              res.status.should.be.equal(401);
-              res.body.code.should.be.equal(401);
-              res.body.errno.should.be.equal(errnos[ERRNO_UNAUTHORIZED]);
-              res.body.error.should.be.equal(errors[UNAUTHORIZED]);
-              done();
-            });
+  describe(`GET ${endpointPrefix}/auth/basic`, () => {
+    const endpoint = `${endpointPrefix}/auth/basic`;
+    const key = config.get('adminClientKey');
+    const secret = config.get('adminClientSecret');
+    const scopes = ['admin'];
+    const payload = {
+      scopes,
+      username: 'admin',
+      password: config.get('adminPass')
+    };
+
+    [{
+      reason: 'there is no auth token',
+      token: () => {}
+    }, {
+      reason: 'authToken signature is invalid',
+      token: function*() {
+        yield signClientRequest(
+          { key, secret: 'banana'}, payload
+        );
+      }
+    }, {
+      reason: 'admin pass is incorrect',
+      token: function*() {
+        yield signClientRequest(
+          { key, secret }, Object.assign(payload, { password: 'banana' })
+        );
+      }
+    }].forEach(test => {
+      it(`should respond 401 Unauthorized if ${test.reason}`,
+         function*() {
+        yield server.get(endpoint)
+                    .query({ authToken: test.token() })
+                    .expect(401, {
+                      code: 401,
+                      errno: errnos[ERRNO_UNAUTHORIZED],
+                      error: errors[UNAUTHORIZED]
+                    })
+      });
     });
 
-    it('should respond 401 Unauthorized if auth header is invalid', done => {
-      server.post(endpointPrefix + '/auth/basic')
-            .set('Authorization', 'Invalid')
-            .expect(401)
-            .end((err, res) => {
-              res.status.should.be.equal(401);
-              res.body.code.should.be.equal(401);
-              res.body.errno.should.be.equal(errnos[ERRNO_UNAUTHORIZED]);
-              res.body.error.should.be.equal(errors[UNAUTHORIZED]);
-              done();
-            });
-    });
-
-    it('should respond 401 Unauthorized if admin pass is incorrect', done => {
-      server.post(endpointPrefix + '/auth/basic')
-            .set('Authorization', 'Basic invalidpassword')
-            .expect(401)
-            .end((err, res) => {
-              res.status.should.be.equal(401);
-              res.body.code.should.be.equal(401);
-              res.body.errno.should.be.equal(errnos[ERRNO_UNAUTHORIZED]);
-              res.body.error.should.be.equal(errors[UNAUTHORIZED]);
-              done();
-            });
-    });
-
-    it('should respond 201 Created if admin pass is correct', done => {
-      const pass = btoa('admin:' + config.get('adminPass'));
-      server.post(endpointPrefix + '/auth/basic')
-            .set('Authorization', 'Basic ' + pass)
-            .expect(200)
-            .end((err, res) => {
-              res.status.should.be.equal(201);
-              should.exist(res.body.token);
-              done();
-            });
+    it('should respond 200 if admin pass is correct',
+       function*() {
+      const authToken = yield signClientRequest({ key, secret }, {
+        scopes,
+        username: 'admin',
+        password: config.get('adminPass')
+      });
+      const res = yield server.get(endpoint)
+                              .query({ authToken })
+                              .expect(200);
+      const decoded = jwt.verify(res.body.token, config.get('sessionSecret'));
+      decoded.should.match({ clientKey: key, scopes });
     });
   });
 
@@ -90,11 +93,25 @@ describe('Authentication API', () => {
     ];
 
     beforeEach(function*() {
-      const { Clients } = yield db();
+      const { Clients, Permissions } = yield db();
       yield Clients.destroy({ where: {}});
+      yield Permissions.destroy({ where: {}});
+
+      // Admin client.
+      yield Permissions.create({ name: 'admin' });
+      const admin = yield Clients.create({
+        name: 'admin',
+        key: config.get('adminClientKey'),
+        secret: config.get('adminClientSecret'),
+      });
+      yield admin.addPermission(['admin']);
+
+      // Dummy permission.
+      yield Permissions.create({ name: 'dummy' });
     });
 
-    it('should respond 401 unauthorized if there is no client token', function*() {
+    it('should respond 401 unauthorized if there is no client token',
+       function*() {
       yield server.get(endpoint)
                   .expect(401)
                   .expect({
@@ -118,13 +135,15 @@ describe('Authentication API', () => {
 
     it('should respond 400 if the client has no redirect url', function*() {
       const adminToken = yield loginAsAdmin(server);
-      const client = yield createClient(server, adminToken, { name: 'test' });
+      const client = yield createClient(server, adminToken, {
+        name: 'test',
+        permissions: ['dummy']
+      });
       const authToken = yield signClientRequest(
-        client, { redirectUrl: redirectUrls[0] }
+        client, { redirectUrl: redirectUrls[0], scopes: ['dummy'] }
       );
-
       yield server.get(endpoint)
-                  .query({ authToken: authToken })
+                  .query({ authToken })
                   .expect(400);
     });
 
@@ -136,25 +155,27 @@ describe('Authentication API', () => {
           name: 'test',
           authRedirectUrls: [ redirectUrls[0] ],
           authFailureRedirectUrls: [ failureRedirectUrls[0] ],
+          permissions: ['dummy']
         }
       );
 
+      const payload = { scopes: ['dummy'] };
       let authToken = yield signClientRequest(
-        client, { redirectUrl: redirectUrls[1] }
+        client, Object.assign(payload, { redirectUrl: redirectUrls[1] })
       );
 
       yield server.get(endpoint)
                   .query({ authToken: authToken })
                   .expect(400);
 
-      authToken = yield signClientRequest(client, null);
+      authToken = yield signClientRequest(client, payload);
 
       yield server.get(endpoint)
                   .query({ authToken: authToken })
                   .expect(400);
 
       authToken = yield signClientRequest(
-        client, { redirectUrl: redirectUrls[0] }
+        client, Object.assign(payload, { redirectUrl: redirectUrls[0] })
       );
 
       yield server.get(endpoint)
@@ -176,18 +197,20 @@ describe('Authentication API', () => {
           name: 'test',
           authRedirectUrls: redirectUrls,
           authFailureRedirectUrls: failureRedirectUrls,
+          permissions: ['dummy']
         }
       );
 
       const authToken = yield signClientRequest(client, {
         redirectUrl: redirectUrls[1],
-        failureUrl: failureRedirectUrls[1]
+        failureUrl: failureRedirectUrls[1],
+        scopes: ['dummy']
       });
 
       // Supertest's agent keeps the cookies
       const agent = supertest.agent(app);
       let res = yield agent.get(endpoint)
-                           .query({ authToken: authToken })
+                           .query({ authToken })
                            .expect(302)
                            .expect('location', /facebook\.com/)
                            .expect('set-cookie', /^connect\.sid\.auth=/);
@@ -220,17 +243,23 @@ describe('Authentication API', () => {
                  .expect(
                    'location', new RegExp(`^${redirectUrls[1]}\\?token=`)
                  );
+
+      const { Users } = yield db();
+      const user = yield Users.findOne({ where: expectedId });
+      should.exist(user);
+
       const token = url.parse(res.headers.location, true).query.token;
-      const decodedToken = jwt.verify(token, config.get('adminSessionSecret'));
-      decodedToken.should.match({ id: expectedId, scope: 'user' });
+      const decodedToken = jwt.verify(token, config.get('sessionSecret'));
+      decodedToken.should.match({
+        userId: user.id,
+        clientKey: client.key,
+        scopes: ['dummy']
+      });
 
       facebook.done();
       nock.cleanAll();
       nock.restore();
 
-      const { Users } = yield db();
-      const user = yield Users.findOne({ where: expectedId });
-      should.exist(user);
     });
   });
 });
